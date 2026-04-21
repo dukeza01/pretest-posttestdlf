@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>แบบทดสอบ · มูลนิธิการศึกษาทางไกลฯ (Cloud)</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Mitr:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ========== CSS เดิมทั้งหมด (เหมือนเดิม ไม่เปลี่ยนแปลง) ========== */
+:root {
+  --peach:#FFD6C8; --lavender:#DDD6F3; --mint:#C8EDD6; --sky:#C8E0FF; --butter:#FFF0C8; --rose:#FFD6E7;
+  --peach-d:#E8896A; --lavender-d:#7C6DB5; --mint-d:#3D9E65; --sky-d:#3A7FD4; --butter-d:#C49A1A; --rose-d:#C45E8A;
+  --text-dark:#2D2640; --text-mid:#5A5370; --text-light:#9A92B0;
+  --bg-main:#FBF9FF; --bg-card:#FFFFFF;
+  --shadow-soft:0 8px 32px rgba(100,80,160,0.10);
+  --shadow-card:0 4px 20px rgba(100,80,160,0.08);
+  --rx:28px; --rl:20px; --rm:14px; --rs:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans Thai',sans-serif;background:var(--bg-main);min-height:100vh;color:var(--text-dark);overflow-x:hidden;font-size:17px;line-height:1.5}
+
+.bg-blobs{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:0.4;animation:drift 12s ease-in-out infinite alternate}
+.b1{width:520px;height:520px;background:var(--lavender);top:-120px;left:-100px;animation-delay:0s}
+.b2{width:400px;height:400px;background:var(--peach);top:40%;right:-80px;animation-delay:-4s}
+.b3{width:350px;height:350px;background:var(--mint);bottom:-80px;left:30%;animation-delay:-8s}
+.b4{width:280px;height:280px;background:var(--sky);top:20%;left:50%;animation-delay:-2s}
+@keyframes drift{0%{transform:translate(0,0) scale(1)}100%{transform:translate(30px,20px) scale(1.05)}}
+
+.app{position:relative;z-index:1;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:2rem 1rem}
+.card{background:rgba(255,255,255,0.80);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:var(--rx);border:1.5px solid rgba(255,255,255,0.9);box-shadow:var(--shadow-soft);width:100%;max-width:760px;padding:2rem;margin:auto;animation:slideUp 0.5s cubic-bezier(0.16,1,0.3,1) both}
+@keyframes slideUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+
+.screen{display:none}
+.screen.active{display:block;animation:fadeIn 0.35s ease both}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* HOME */
+.logo-wrap{display:flex;align-items:center;gap:12px;margin-bottom:2rem}
+.logo-circle{width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--lavender),var(--sky));display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;box-shadow:0 4px 16px rgba(120,100,200,0.2)}
+.logo-text h1{font-family:'Mitr',sans-serif;font-size:20px;font-weight:500;color:var(--text-dark)}
+.logo-text p{font-size:14px;color:var(--text-light)}
+.home-title{font-family:'Mitr',sans-serif;font-size:32px;font-weight:600;line-height:1.3;margin-bottom:12px;background:linear-gradient(135deg,var(--lavender-d),var(--sky-d));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.home-sub{font-size:16px;color:var(--text-mid);margin-bottom:2rem;line-height:1.7}
+
+.name-field{margin-bottom:1.6rem}
+.name-label{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:500;color:var(--text-mid);margin-bottom:8px}
+.name-label .req{color:var(--rose-d)}
+.name-label .hint{font-size:13px;color:var(--text-light);font-weight:400}
+.name-input{width:100%;padding:14px 18px;border:1.5px solid rgba(120,100,200,0.18);border-radius:var(--rm);background:rgba(255,255,255,0.8);font-family:'Noto Sans Thai',sans-serif;font-size:17px;color:var(--text-dark);outline:none;transition:border-color 0.2s,box-shadow 0.2s}
+.name-input:focus{border-color:var(--lavender-d);box-shadow:0 0 0 3px rgba(124,109,181,0.12);background:#fff}
+.name-input.err{border-color:var(--rose-d);box-shadow:0 0 0 3px rgba(196,94,138,0.1)}
+.name-err{font-size:14px;color:var(--rose-d);margin-top:6px;display:none}
+.name-err.show{display:block}
+.seq-status{display:none;margin-top:10px;padding:12px 16px;border-radius:var(--rm);font-size:15px;line-height:1.6}
+.seq-status.show{display:flex;align-items:center;gap:10px}
+.seq-none{background:rgba(200,224,255,0.4);color:var(--sky-d);border:1px solid rgba(58,127,212,0.2)}
+.seq-pre-done{background:rgba(255,240,200,0.6);color:var(--butter-d);border:1px solid rgba(196,154,26,0.25)}
+.seq-all-done{background:rgba(200,237,214,0.5);color:var(--mint-d);border:1px solid rgba(61,158,101,0.25)}
+
+.role-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:2rem}
+.role-card{background:var(--bg-card);border:2px solid transparent;border-radius:var(--rl);padding:1.6rem 1rem;text-align:center;cursor:pointer;transition:all 0.2s cubic-bezier(0.16,1,0.3,1);box-shadow:var(--shadow-card);position:relative;overflow:hidden;z-index:2}
+.role-card::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity 0.2s;border-radius:calc(var(--rl) - 2px);pointer-events:none}
+.role-card.student::before{background:linear-gradient(135deg,rgba(221,214,243,0.4),rgba(200,224,255,0.4))}
+.role-card.teacher::before{background:linear-gradient(135deg,rgba(255,214,200,0.4),rgba(255,240,200,0.4))}
+.role-card:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(100,80,160,0.15)}
+.role-card:hover::before{opacity:1}
+.role-card.active.student{border-color:var(--lavender-d);background:linear-gradient(135deg,#F0EDFF,#EBF3FF)}
+.role-card.active.teacher{border-color:var(--peach-d);background:linear-gradient(135deg,#FFF0EB,#FFFAEB)}
+.role-card .icon{font-size:44px;margin-bottom:12px;display:block}
+.role-card h3{font-family:'Mitr',sans-serif;font-size:20px;font-weight:500;color:var(--text-dark);margin-bottom:6px}
+.role-card p{font-size:14px;color:var(--text-light)}
+.role-check{position:absolute;top:12px;right:12px;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;opacity:0;transform:scale(0);transition:all 0.25s cubic-bezier(0.34,1.56,0.64,1)}
+.student .role-check{background:var(--lavender-d)}
+.teacher .role-check{background:var(--peach-d)}
+.role-card.active .role-check{opacity:1;transform:scale(1)}
+
+.btn-primary{width:100%;padding:16px;border:none;border-radius:var(--rm);background:linear-gradient(135deg,var(--lavender-d),var(--sky-d));color:#fff;font-family:'Mitr',sans-serif;font-size:18px;font-weight:500;cursor:pointer;transition:all 0.2s;box-shadow:0 4px 16px rgba(120,100,200,0.3);position:relative;overflow:hidden}
+.btn-primary::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.2),transparent);pointer-events:none}
+.btn-primary:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 24px rgba(120,100,200,0.35)}
+.btn-primary:active:not(:disabled){transform:translateY(0)}
+.btn-primary:disabled{opacity:0.4;cursor:not-allowed}
+.btn-outline{padding:14px 24px;border:1.5px solid rgba(120,100,200,0.2);border-radius:var(--rm);background:rgba(255,255,255,0.7);color:var(--text-mid);font-family:'Noto Sans Thai',sans-serif;font-size:16px;cursor:pointer;transition:all 0.2s}
+.btn-outline:hover:not(:disabled){background:#fff;border-color:var(--lavender-d);color:var(--lavender-d)}
+.btn-outline:disabled{opacity:0.4;cursor:not-allowed}
+.btn-ghost{padding:14px 20px;border:1.5px solid rgba(0,0,0,0.1);border-radius:var(--rm);background:transparent;color:var(--text-mid);font-family:'Noto Sans Thai',sans-serif;font-size:16px;cursor:pointer;transition:all 0.2s}
+.btn-ghost:hover{background:#fff;border-color:var(--lavender-d);color:var(--lavender-d)}
+.btn-excel{padding:14px 22px;border:1.5px solid rgba(39,174,96,0.3);border-radius:var(--rm);background:linear-gradient(135deg,rgba(200,237,214,0.5),rgba(168,230,196,0.4));color:var(--mint-d);font-family:'Noto Sans Thai',sans-serif;font-size:16px;font-weight:500;cursor:pointer;transition:all 0.2s}
+.btn-excel:hover{background:linear-gradient(135deg,rgba(200,237,214,0.8),rgba(168,230,196,0.7));border-color:var(--mint-d);box-shadow:0 4px 12px rgba(61,158,101,0.2)}
+
+/* QUIZ */
+.quiz-header{margin-bottom:2rem}
+.phase-pill{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;border-radius:30px;font-size:14px;font-weight:600;letter-spacing:0.5px;margin-bottom:16px}
+.phase-pre{background:var(--butter);color:var(--butter-d)}
+.phase-post{background:var(--mint);color:var(--mint-d)}
+.phase-dot{width:9px;height:9px;border-radius:50%;animation:pulse 1.4s ease-in-out infinite}
+.phase-pre .phase-dot{background:var(--butter-d)}
+.phase-post .phase-dot{background:var(--mint-d)}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.4);opacity:0.6}}
+.prog-wrap{display:flex;align-items:center;gap:12px}
+.prog-track{flex:1;height:8px;background:rgba(0,0,0,0.06);border-radius:4px;overflow:hidden}
+.prog-fill{height:8px;border-radius:4px;transition:width 0.4s cubic-bezier(0.16,1,0.3,1);position:relative;overflow:hidden}
+.prog-fill.pre-p{background:linear-gradient(90deg,var(--butter-d),#F5A623)}
+.prog-fill.post-p{background:linear-gradient(90deg,var(--mint-d),#27AE60)}
+.prog-fill::after{content:'';position:absolute;top:0;left:-100%;width:60px;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.6),transparent);animation:shimmer 1.5s ease-in-out infinite}
+@keyframes shimmer{to{left:200%}}
+.prog-label{font-size:14px;color:var(--text-light);white-space:nowrap;min-width:40px;text-align:right}
+.q-num{font-size:14px;color:var(--text-light);margin:1.2rem 0 8px}
+.q-text{font-size:20px;font-weight:500;line-height:1.75;color:var(--text-dark);margin-bottom:1.6rem}
+.options{display:flex;flex-direction:column;gap:12px}
+.opt{display:flex;align-items:flex-start;gap:14px;padding:14px 18px;border:1.5px solid rgba(0,0,0,0.07);border-radius:var(--rm);background:rgba(255,255,255,0.7);cursor:pointer;text-align:left;transition:all 0.18s cubic-bezier(0.16,1,0.3,1);font-size:16px;color:var(--text-dark);line-height:1.6;font-family:'Noto Sans Thai',sans-serif;}
+.opt:hover{background:#fff;border-color:var(--lavender-d);transform:translateX(5px);box-shadow:var(--shadow-card)}
+.opt.sel{background:linear-gradient(135deg,#F0EDFF,#EBF3FF);border-color:var(--lavender-d);box-shadow:0 4px 16px rgba(124,109,181,0.15)}
+.opt-ltr{width:32px;height:32px;flex-shrink:0;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;font-family:'Mitr',sans-serif;background:rgba(0,0,0,0.06);color:var(--text-mid);transition:all 0.18s}
+.opt.sel .opt-ltr{background:var(--lavender-d);color:#fff}
+.opt-txt{flex:1;padding-top:4px}
+.quiz-footer{display:flex;justify-content:space-between;align-items:center;margin-top:2rem;gap:15px}
+.ans-cnt{font-size:14px;color:var(--text-light);text-align:center;flex:1}
+
+/* BETWEEN */
+.bw-top{display:flex;flex-direction:column;align-items:center;text-align:center;padding-bottom:1.8rem;border-bottom:1.5px solid rgba(0,0,0,0.07);margin-bottom:2rem}
+.score-ring{width:150px;height:150px;position:relative;margin-bottom:1.5rem}
+.score-ring svg{transform:rotate(-90deg)}
+.ring-text{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring-num{font-family:'Mitr',sans-serif;font-size:36px;font-weight:600;color:var(--text-dark)}
+.ring-den{font-size:13px;color:var(--text-light)}
+.bw-title{font-family:'Mitr',sans-serif;font-size:28px;font-weight:600;color:var(--text-dark);margin-bottom:8px}
+.bw-name{font-size:16px;color:var(--text-mid);margin-bottom:6px}
+.bw-score{font-family:'Mitr',sans-serif;font-size:20px;font-weight:600;color:var(--butter-d)}
+.bw-menu-title{font-size:14px;font-weight:600;color:var(--text-mid);letter-spacing:0.5px;margin-bottom:16px;text-transform:uppercase}
+.bw-menu{display:flex;flex-direction:column;gap:14px}
+.menu-card{display:flex;align-items:center;gap:18px;padding:18px 22px;border-radius:var(--rl);border:1.5px solid rgba(0,0,0,0.07);background:rgba(255,255,255,0.7);cursor:pointer;transition:all 0.2s cubic-bezier(0.16,1,0.3,1);text-align:left}
+.menu-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-card);background:#fff}
+.menu-card.mc-post{border-color:rgba(61,158,101,0.3);background:linear-gradient(135deg,rgba(200,237,214,0.35),rgba(200,224,255,0.2))}
+.menu-card.mc-post:hover{border-color:var(--mint-d);background:linear-gradient(135deg,rgba(200,237,214,0.55),rgba(200,224,255,0.3))}
+.menu-icon{width:54px;height:54px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0}
+.mi-green{background:linear-gradient(135deg,#C8EDD6,#A8E6C4)}
+.mi-gray{background:linear-gradient(135deg,#F0EEF8,#E4E0F5)}
+.menu-body h4{font-family:'Mitr',sans-serif;font-size:18px;font-weight:500;color:var(--text-dark);margin-bottom:4px}
+.menu-body p{font-size:14px;color:var(--text-light);line-height:1.5}
+.menu-arr{margin-left:auto;color:var(--text-light);font-size:24px;font-weight:300}
+
+/* RESULT DASHBOARD */
+.dash-header{margin-bottom:1.8rem}
+.dash-toprow{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:1.8rem}
+.dash-badge{display:inline-block;padding:5px 14px;border-radius:24px;font-size:13px;font-weight:600;background:var(--lavender);color:var(--lavender-d);margin-bottom:10px}
+.dash-name{font-family:'Mitr',sans-serif;font-size:28px;font-weight:600;color:var(--text-dark);margin-bottom:5px}
+.dash-sub{font-size:15px;color:var(--text-mid)}
+.dash-date{font-size:14px;color:var(--text-light);text-align:right;line-height:1.7}
+.score-trio{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:1.6rem}
+.trio{border-radius:var(--rl);padding:1.3rem 0.8rem;text-align:center;border:1.5px solid transparent}
+.trio.t-pre{background:linear-gradient(145deg,#FFF9E8,#FFF0C0);border-color:rgba(196,154,26,0.2)}
+.trio.t-post{background:linear-gradient(145deg,#E6F9EF,#D0F0DD);border-color:rgba(61,158,101,0.2)}
+.trio.t-diff{background:linear-gradient(145deg,#EDE9FF,#E3EDFF);border-color:rgba(124,109,181,0.2)}
+.trio-lbl{font-size:12px;color:var(--text-light);letter-spacing:0.6px;margin-bottom:6px;font-weight:600}
+.trio-val{font-family:'Mitr',sans-serif;font-size:32px;font-weight:600;line-height:1.2}
+.t-pre .trio-val{color:var(--butter-d)}
+.t-post .trio-val{color:var(--mint-d)}
+.t-diff .trio-val{color:var(--lavender-d)}
+.trio-sub{font-size:12px;color:var(--text-light);margin-top:4px}
+.section-box{background:rgba(255,255,255,0.7);border:1.5px solid rgba(0,0,0,0.06);border-radius:var(--rl);padding:1.5rem;margin-bottom:1.2rem}
+.sec-title{font-size:14px;font-weight:600;color:var(--text-mid);letter-spacing:0.4px;margin-bottom:1.2rem}
+.bar-row{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.bar-lbl{font-size:14px;color:var(--text-mid);width:64px;flex-shrink:0}
+.bar-track{flex:1;height:28px;background:rgba(0,0,0,0.05);border-radius:8px;overflow:hidden}
+.bar-fill{height:28px;border-radius:8px;display:flex;align-items:center;padding:0 12px;font-size:14px;font-weight:600;color:#fff;transition:width 0.9s cubic-bezier(0.16,1,0.3,1);min-width:42px}
+.bf-pre{background:linear-gradient(90deg,#F5A623,var(--butter-d))}
+.bf-post{background:linear-gradient(90deg,#27AE60,var(--mint-d))}
+.bar-pct{font-size:14px;color:var(--text-light);min-width:44px;text-align:right}
+.diff-chip{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;border-radius:30px;font-size:14px;font-weight:600;margin-top:12px}
+.dc-up{background:var(--mint);color:var(--mint-d)}
+.dc-same{background:#F0EEF8;color:var(--text-light)}
+.dc-down{background:var(--rose);color:var(--rose-d)}
+.radar-legend{display:flex;gap:20px;justify-content:center;margin-top:12px;font-size:14px;color:var(--text-mid)}
+.ldot{width:12px;height:12px;border-radius:3px;display:inline-block;margin-right:5px;vertical-align:middle}
+.dtoggle{display:flex;align-items:center;gap:10px;width:100%;padding:14px 0;background:none;border:none;border-top:1px solid rgba(0,0,0,0.06);font-size:15px;font-weight:500;color:var(--text-mid);cursor:pointer;transition:color 0.15s}
+.dtoggle:hover{color:var(--lavender-d)}
+.dtoggle .arr{font-size:12px;transition:transform 0.25s}
+.dtoggle.open .arr{transform:rotate(90deg)}
+.ans-list{display:none;padding:10px 0 6px}
+.ans-list.open{display:block;animation:fadeIn 0.2s ease}
+.ans-item{display:flex;align-items:flex-start;gap:12px;padding:10px 14px;border-radius:var(--rs);margin-bottom:6px;font-size:15px;line-height:1.5}
+.ai-ok{background:linear-gradient(135deg,#E8F8EF,#D4F2E2)}
+.ai-fail{background:linear-gradient(135deg,#FEF0F0,#FCE0E0)}
+.ai-num{font-weight:600;min-width:24px;color:var(--text-light)}
+.ai-body{flex:1;color:var(--text-dark)}
+.dash-actions{display:flex;gap:12px;margin-top:2rem}
+.dash-actions .btn-ghost{flex:1}
+.dash-actions .btn-primary{flex:2;font-size:17px}
+
+/* OVERALL DASHBOARD */
+.overall-stats-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+.stat-card-overall {
+  flex: 1;
+  min-width: 180px;
+  background: rgba(255,255,255,0.75);
+  backdrop-filter: blur(4px);
+  border-radius: 24px;
+  padding: 20px 16px;
+  text-align: center;
+  box-shadow: var(--shadow-card);
+  border: 1px solid rgba(0,0,0,0.05);
+  transition: transform 0.2s;
+}
+.stat-card-overall:hover { transform: translateY(-3px); background: white; }
+.stat-title { font-size: 18px; font-weight: 600; color: var(--text-dark); margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.stat-count { font-size: 14px; color: var(--text-light); margin-bottom: 12px; }
+.stat-scores { display: flex; justify-content: center; gap: 24px; font-size: 16px; font-weight: 500; }
+.stat-pre { color: var(--butter-d); }
+.stat-post { color: var(--mint-d); }
+.stat-pre span, .stat-post span { font-weight: 700; font-size: 18px; }
+
+.overall-table-wrapper {
+  background: rgba(255,255,255,0.7);
+  border-radius: 24px;
+  border: 1px solid rgba(0,0,0,0.06);
+  overflow-x: auto;
+  margin-top: 8px;
+}
+.overall-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+  min-width: 580px;
+}
+.overall-table th {
+  background: rgba(221,214,243,0.35);
+  padding: 14px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-mid);
+  text-align: center;
+}
+.overall-table td {
+  padding: 12px 10px;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  text-align: center;
+  vertical-align: middle;
+}
+.overall-table td:first-child { font-weight: 600; color: var(--lavender-d); }
+.role-badge { display: inline-flex; align-items: center; gap: 5px; background: #F0EEF8; padding: 4px 12px; border-radius: 30px; font-size: 13px; }
+.status-badge { display: inline-block; padding: 4px 12px; border-radius: 30px; font-size: 12px; font-weight: 500; }
+.status-complete { background: #C8EDD6; color: #2c6e4a; }
+.status-waitpost { background: #FFF0C8; color: #b87d1a; }
+.status-waitpre { background: #E0E0E0; color: #666; }
+.diff-positive { color: var(--mint-d); font-weight: 600; }
+.diff-negative { color: var(--rose-d); font-weight: 600; }
+
+.overall-actions {
+  display: flex;
+  gap: 14px;
+  margin-top: 28px;
+  flex-wrap: wrap;
+}
+.overall-actions button { flex: 1; min-width: 130px; }
+
+.btn-home-exit {
+  background: rgba(0,0,0,0.05);
+  border: 1px solid rgba(0,0,0,0.1);
+  color: var(--text-mid);
+  padding: 10px 16px;
+  border-radius: 40px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn-home-exit:hover {
+  background: rgba(0,0,0,0.1);
+  transform: translateY(-2px);
+}
+
+/* AUTH MODAL */
+.auth-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(45,38,64,0.55);
+  backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 1rem;
+  animation: fadeIn 0.2s ease;
+}
+.auth-overlay.hidden { display: none; }
+.auth-modal {
+  background: #fff;
+  border-radius: 28px;
+  padding: 2rem 1.8rem;
+  width: 100%; max-width: 400px;
+  box-shadow: 0 20px 60px rgba(45,38,64,0.25);
+  animation: slideUp 0.3s cubic-bezier(0.16,1,0.3,1);
+}
+.auth-modal-icon { font-size: 42px; text-align: center; margin-bottom: 10px; }
+.auth-modal-title {
+  font-family: 'Mitr', sans-serif;
+  font-size: 22px; font-weight: 600;
+  color: var(--text-dark);
+  text-align: center; margin-bottom: 6px;
+}
+.auth-modal-sub {
+  font-size: 14px; color: var(--text-light);
+  text-align: center; margin-bottom: 1.6rem; line-height: 1.6;
+}
+.auth-field { margin-bottom: 1.1rem; }
+.auth-label {
+  font-size: 14px; font-weight: 500;
+  color: var(--text-mid); margin-bottom: 6px; display: block;
+}
+.auth-input {
+  width: 100%; padding: 12px 16px;
+  border: 1.5px solid rgba(120,100,200,0.18);
+  border-radius: var(--rm);
+  background: rgba(255,255,255,0.9);
+  font-family: 'Noto Sans Thai', sans-serif;
+  font-size: 16px; color: var(--text-dark);
+  outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+}
+.auth-input:focus {
+  border-color: var(--lavender-d);
+  box-shadow: 0 0 0 3px rgba(124,109,181,0.12);
+}
+.auth-input.err { border-color: var(--rose-d); box-shadow: 0 0 0 3px rgba(196,94,138,0.1); }
+.auth-err {
+  font-size: 13px; color: var(--rose-d);
+  margin-top: 8px; display: none;
+  padding: 8px 12px;
+  background: rgba(255,214,231,0.4);
+  border-radius: 8px; text-align: center;
+}
+.auth-err.show { display: block; }
+.auth-actions { display: flex; gap: 10px; margin-top: 1.5rem; }
+.btn-auth-cancel {
+  flex: 1; padding: 13px;
+  border: 1.5px solid rgba(120,100,200,0.2);
+  border-radius: var(--rm);
+  background: transparent; color: var(--text-mid);
+  font-family: 'Noto Sans Thai', sans-serif;
+  font-size: 16px; cursor: pointer; transition: all 0.2s;
+}
+.btn-auth-cancel:hover { background: #f5f3ff; border-color: var(--lavender-d); color: var(--lavender-d); }
+.btn-auth-confirm {
+  flex: 2; padding: 13px;
+  border: none; border-radius: var(--rm);
+  background: linear-gradient(135deg, #E84040, #C43030);
+  color: #fff; font-family: 'Mitr', sans-serif;
+  font-size: 16px; font-weight: 500;
+  cursor: pointer; transition: all 0.2s;
+  box-shadow: 0 4px 14px rgba(200,48,48,0.3);
+}
+.btn-auth-confirm:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(200,48,48,0.35); }
+</style>
+</head>
+<body>
+
+<div class="bg-blobs">
+  <div class="blob b1"></div><div class="blob b2"></div>
+  <div class="blob b3"></div><div class="blob b4"></div>
+</div>
+
+<div class="app"><div class="card" id="main-card">
+
+<div class="screen active" id="s-home">
+  <div class="logo-wrap">
+    <div class="logo-circle">🛰️</div>
+    <div class="logo-text">
+      <h1>มูลนิธิการศึกษาทางไกลผ่านดาวเทียม ในพระบรมราชูปถัมภ์</h1>
+      <p>ระบบแบบทดสอบออนไลน์ (Pretest - Posttest) - รองรับหลายเครื่อง</p>
+    </div>
+  </div>
+  <div class="home-title">แบบทดสอบวัดความรู้<br>กิจกรรมเข้าค่ายนักเรียนทุนพระราชทานฯ</div>
+  <div class="home-sub">แบบทดสอบ Pretest – Posttest เพื่อวัดความรู้ก่อนและหลังการอบรม</div>
+  <div class="name-field">
+    <div class="name-label">รหัสลำดับทุน<span class="req">*</span><span class="hint">&nbsp;(กรอกเลข 1–72)</span></div>
+    <input class="name-input" id="name-input" type="number" placeholder="เช่น 15" min="1" max="72">
+    <div class="name-err" id="name-err">กรุณากรอกลำดับทุน 1–72 ก่อนเริ่มทำแบบทดสอบ</div>
+    <div class="seq-status" id="seq-status"></div>
+  </div>
+  <div class="role-grid">
+    <div class="role-card student" id="rc-student">
+      <div class="role-check">✓</div>
+      <span class="icon">🎒</span><h3>นักเรียน</h3><p>ผู้เข้าร่วมโครงการ</p>
+    </div>
+    <div class="role-card teacher" id="rc-teacher">
+      <div class="role-check">✓</div>
+      <span class="icon">👨‍🏫</span><h3>ครู</h3><p>บุคลากรทางการศึกษา</p>
+    </div>
+  </div>
+  <button class="btn-primary" id="home-start" disabled>เริ่มทำแบบทดสอบ →</button>
+  <button class="btn-ghost" style="width:100%; margin-top:16px; font-weight:500;" id="overall-btn">📊 ดูสรุปผลภาพรวมทั้งหมด</button>
+</div>
+
+<div class="screen" id="s-quiz">
+  <div class="quiz-header">
+    <div class="phase-pill" id="phase-pill"><span class="phase-dot"></span><span id="phase-label">PRE TEST</span></div>
+    <div class="prog-wrap">
+      <div class="prog-track"><div class="prog-fill pre-p" id="prog-fill" style="width:6.67%"></div></div>
+      <div class="prog-label" id="prog-label">1 / 15</div>
+    </div>
+  </div>
+  <div class="q-num" id="q-num">ข้อที่ 1 จาก 15</div>
+  <div class="q-text" id="q-text"></div>
+  <div class="options" id="opts"></div>
+  <div class="quiz-footer">
+    <button class="btn-outline" id="btn-prev" disabled>← ก่อนหน้า</button>
+    <div class="ans-cnt" id="ans-cnt"></div>
+    <button class="btn-outline" id="btn-next">ถัดไป →</button>
+  </div>
+  <div style="margin-top: 20px; text-align: center;">
+    <button class="btn-home-exit" id="exit-to-home-from-quiz">🏠 กลับหน้าหลัก (เปลี่ยนประเภท/ลำดับทุน)</button>
+  </div>
+</div>
+
+<div class="screen" id="s-between">
+  <div class="bw-top">
+    <div class="score-ring">
+      <svg width="150" height="150" viewBox="0 0 150 150">
+        <circle cx="75" cy="75" r="62" fill="none" stroke="rgba(0,0,0,0.06)" stroke-width="12"/>
+        <circle cx="75" cy="75" r="62" fill="none" stroke="url(#bwGrad)" stroke-width="12"
+          stroke-linecap="round" stroke-dasharray="389" id="ring-circle"
+          style="stroke-dashoffset:389;transition:stroke-dashoffset 1s cubic-bezier(0.16,1,0.3,1)"/>
+        <defs><linearGradient id="bwGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#F5A623"/><stop offset="100%" stop-color="#C49A1A"/>
+        </linearGradient></defs>
+      </svg>
+      <div class="ring-text">
+        <div class="ring-num" id="ring-num">0</div>
+        <div class="ring-den">จาก 15</div>
+      </div>
+    </div>
+    <div class="bw-title">ทำ Pretest เสร็จแล้ว! 🎉</div>
+    <div class="bw-name" id="bw-name"></div>
+    <div class="bw-score" id="bw-score"></div>
+  </div>
+  <div class="bw-menu-title">เลือกขั้นตอนถัดไป</div>
+  <div class="bw-menu">
+    <div class="menu-card mc-post" id="continue-post">
+      <div class="menu-icon mi-green">📝</div>
+      <div class="menu-body">
+        <h4>ทำ Posttest ต่อเลย</h4>
+        <p>ทดสอบความรู้หลังการอบรม เพื่อดูพัฒนาการของคุณ</p>
+      </div>
+      <span class="menu-arr">›</span>
+    </div>
+    <div class="menu-card" id="reset-home">
+      <div class="menu-icon mi-gray">🏠</div>
+      <div class="menu-body">
+        <h4>กลับหน้าหลัก</h4>
+        <p>บันทึกคะแนน Pretest แล้ว สามารถทำ Posttest ในภายหลัง</p>
+      </div>
+      <span class="menu-arr">›</span>
+    </div>
+  </div>
+  <div style="margin-top: 20px; text-align: center;">
+    <button class="btn-home-exit" id="exit-to-home-from-between">🏠 กลับหน้าหลัก (เปลี่ยนประเภท/ลำดับทุน)</button>
+  </div>
+</div>
+
+<div class="screen" id="s-result">
+  <div class="dash-header">
+    <div class="dash-toprow">
+      <div>
+        <div class="dash-badge" id="d-badge">นักเรียน</div>
+        <div class="dash-name" id="d-name"></div>
+        <div class="dash-sub">มูลนิธิการศึกษาทางไกลผ่านดาวเทียม ในพระบรมราชูปถัมภ์</div>
+      </div>
+      <div class="dash-date" id="d-date"></div>
+    </div>
+  </div>
+  <div class="score-trio">
+    <div class="trio t-pre"><div class="trio-lbl">PRETEST</div><div class="trio-val" id="d-pre">—</div><div class="trio-sub">คะแนน</div><div class="trio-pct" id="d-pre-pct"></div></div>
+    <div class="trio t-post"><div class="trio-lbl">POSTTEST</div><div class="trio-val" id="d-post">—</div><div class="trio-sub">คะแนน</div><div class="trio-pct" id="d-post-pct"></div></div>
+    <div class="trio t-diff"><div class="trio-lbl">พัฒนาขึ้น</div><div class="trio-val" id="d-diff">—</div><div class="trio-sub">คะแนน</div><div class="trio-pct" id="d-diff-pct"></div></div>
+  </div>
+  <div class="section-box">
+    <div class="sec-title">เปรียบเทียบคะแนน (เต็ม <span id="full-score-indicator">15</span>)</div>
+    <div class="bar-row"><div class="bar-lbl">Pretest</div><div class="bar-track"><div class="bar-fill bf-pre" id="bar-pre" style="width:0%">0</div></div><div class="bar-pct" id="pct-pre">0%</div></div>
+    <div class="bar-row"><div class="bar-lbl">Posttest</div><div class="bar-track"><div class="bar-fill bf-post" id="bar-post" style="width:0%">0</div></div><div class="bar-pct" id="pct-post">0%</div></div>
+    <div id="diff-chip-wrap"></div>
+  </div>
+  <div class="section-box">
+    <div class="sec-title">ผลรายกลุ่มข้อ — Pretest vs Posttest</div>
+    <div style="display:flex;justify-content:center"><canvas id="radarCanvas" width="300" height="240"></canvas></div>
+    <div class="radar-legend"><span><span class="ldot" style="background:#F5A623"></span>Pretest</span><span><span class="ldot" style="background:#27AE60"></span>Posttest</span></div>
+  </div>
+  <button class="dtoggle" id="tg-pre"><span class="arr">▶</span> รายละเอียดคำตอบ Pretest <span style="margin-left:auto;font-size:14px;font-weight:400;color:var(--text-light)" id="lbl-pre"></span></button>
+  <div class="ans-list" id="al-pre"></div>
+  <button class="dtoggle" id="tg-post"><span class="arr">▶</span> รายละเอียดคำตอบ Posttest <span style="margin-left:auto;font-size:14px;font-weight:400;color:var(--text-light)" id="lbl-post"></span></button>
+  <div class="ans-list" id="al-post"></div>
+  <div class="dash-actions"><button class="btn-ghost" id="reset-from-result">หน้าหลัก</button><button class="btn-primary" id="print-result">📋 บันทึกผลส่วนตัว</button></div>
+</div>
+
+<div class="screen" id="s-overall">
+  <div class="dash-header" style="border-bottom: 1.5px solid rgba(0,0,0,0.07); padding-bottom:1.2rem;">
+    <div class="dash-name" style="font-size:28px;">📊 สรุปผลภาพรวมทั้งหมด</div>
+    <div class="dash-sub">คะแนน Pretest & Posttest ของผู้เข้าสอบทุกคน</div>
+  </div>
+  <div id="overall-content" style="margin-top:1.8rem;"></div>
+  <div class="overall-actions">
+    <button class="btn-outline" id="back-home-from-overall">🏠 กลับหน้าหลัก</button>
+    <button class="btn-excel" id="export-excel">📥 Export Excel</button>
+    <button class="btn-ghost" style="color:var(--rose-d); border-color:rgba(196,94,138,0.3)" id="clear-data">🗑️ ล้างข้อมูล</button>
+  </div>
+</div>
+
+</div></div>
+
+<script>
+// ========== ตั้งค่า URL ของ Google Apps Script Web App ==========
+// 🔴 แทนที่ด้วย URL ที่คุณได้จากการ Deploy (ต้องลงท้ายด้วย /exec)
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzroRmUw8WJDfrHOBM9E2A2RCNHs0l3_BCDkvH14JKn2lJyaWQ9jca39FAAEBeq6c0K1g/exec";  // <--- แก้ไขตรงนี้
+
+// ========== ชุดคำถาม (เหมือนเดิม ไม่เปลี่ยนแปลง) ==========
+const QsPreStudentRaw = [
+  {q:'พระราชปณิธานของในหลวง รัชกาลที่ 9 ในการจัดตั้งมูลนิธิการศึกษาทางไกลผ่านดาวเทียม ในพระบรมราชูปถัมภ์ (ซึ่งตรงกับวัตถุประสงค์ของมูลนิธิฯ) คืออะไร?',
+   opts:['ลดความเหลื่อมล้ำทางการศึกษา','แก้ปัญหาขาดแคลนครู','แก้ปัญหาครูไม่ครบชั้น ครูสอนไม่ตรงสาขาวิชา','ถูกทุกข้อ'], ans:3},
+  {q:'ในหลวงรัชกาลที่ 9 ทรงพระกรุณาโปรดเกล้าฯ ให้เชิญตราสัญลักษณ์เนื่องในโอกาสใดให้เป็นเครื่องหมายของมูลนิธิฯ?',
+   opts:['งานฉลองสิริราชสมบัติครบ 60 ปี','งานฉลองสิริราชสมบัติครบ 50 ปี','พระราชพิธีมหามงคลเฉลิมพระชนมพรรษา 5 รอบ','พระราชพิธีมหามงคลเฉลิมพระชนมพรรษา 6 รอบ'], ans:1},
+  {q:'ในหลวงรัชกาลที่ 9 ได้พระราชทานรายการศึกษาทัศน์ และทรงสอนนักเรียนในรายการศึกษาทัศน์ด้วยพระองค์เอง ถึง 3 ครั้ง ข้อใดกล่าวถูกต้อง?',
+   opts:['ทรงสอนเกี่ยวการปรับปรุงบำรุงดิน โดยใช้ทฤษฎี แกล้งดิน ณ โครงการอ่างเก็บน้ำเขาเต่า อันเนื่องมาจากพระราชดำริ','ทรงสอนเกี่ยวกับการทำฝนเทียม ณ ศูนย์ปฏิบัติการฝนหลวงหัวหิน ท่าอากาศยานหัวหิน','ทรงสอนเกี่ยวกับการบริหารจัดการน้ำและการบำบัดน้ำเสีย ณ โครงการศึกษาวิจัยและพัฒนาสิ่งแวดล้อมแหลมผักเบี้ย อันเนื่องมาจากพระราชดำริ ตำบลแหลมผักเบี้ย','ถูกทุกข้อ'], ans:3},
+  {q:'การศึกษาต้องสร้างให้คนไทยมีคุณลักษณะ 4 ประการ ตามพระบรมราโชบายด้านการศึกษาของพระบาทสมเด็จพระเจ้าอยู่หัว ข้อใดถูกต้อง?',
+   opts:['มีทัศนคติที่ดีและถูกต้อง, มีพื้นฐานชีวิตที่มั่นคงเข้มแข็ง, มีอาชีพ มีงานทำ, เป็นพลเมืองดี มีระเบียบวินัย','มีทัศนคติที่ดีและถูกต้อง, ทำนุบำรุงศิลปวัฒนธรรม, มีอาชีพ มีงานทำ, เป็นพลเมืองดี มีระเบียบวินัย','มีทัศนคติที่ดีและถูกต้อง, มีพื้นฐานชีวิตที่มั่นคงเข้มแข็ง, ทำนุบำรุงศิลปวัฒนธรรม, เป็นพลเมืองดี มีระเบียบวินัย','มีทัศนคติที่ดีและถูกต้อง, มีพื้นฐานชีวิตที่มั่นคงเข้มแข็ง, มีอาชีพ มีงานทำ, ทำนุบำรุงศิลปวัฒนธรรม'], ans:0},
+  {q:'ข้อใดไม่ถูกต้อง เกี่ยวกับการเปลี่ยนแปลง 5 ประการ หลังจากที่พระบาทสมเด็จพระเจ้าอยู่หัวได้พระราชทานพระบรมราชานุญาตให้พัฒนา ต่อยอดการดำเนินงานของมูลนิธิฯ?',
+   opts:['เปลี่ยนระบบ High Definition (HD) เป็น Standard Definition (SD)','ปรับปรุงสถานี ห้องเรียน สื่อการสอนให้ทันสมัย','เปลี่ยนการถ่ายทอดสดเป็นบันทึกเทป','เพิ่มช่องทางออกอากาศ (Website, Application, Youtube)'], ans:0},
+  {q:'ข้อใดกล่าวถูกต้องเกี่ยวกับการออกอากาศรายการของสถานีวิทยุโทรทัศน์การศึกษาทางไกลผ่านดาวเทียม ช่อง DLTV 1–15?',
+   opts:['มูลนิธิฯ บันทึกเทปและออกอากาศระดับชั้นอนุบาลปีที่ 1 ถึง มัธยมศึกษาปีที่ 3 (DLTV 1–12)','มูลนิธิฯ ออกอากาศรายการอาชีวศึกษา รายการอุดมศึกษา และรายการพัฒนาวิชาชีพครู (DLTV13–15)','มูลนิธิฯ ออกอากาศรายการเรียนรู้ตลอดชีวิต ในห้วงนอกเวลาเรียน เป็นรายการความรู้ทั่วไป','ถูกทุกข้อ'], ans:3},
+  {q:'มีจำนวนโรงเรียนและสถานศึกษาผู้ใช้บริการการศึกษาทางไกลผ่านดาวเทียม DLTV กี่แห่ง?',
+   opts:['กว่า 15,000 แห่ง','กว่า 20,000 แห่ง','กว่า 25,000 แห่ง','กว่า 33,000 แห่ง'], ans:3},
+  {q:'มีจำนวนผู้เข้าถึงและได้รับประโยชน์จากการศึกษาทางไกลผ่านดาวเทียม จำนวนเท่าใด?',
+   opts:['กว่า 1,000,000 คน','กว่า 1,200,000 คน','กว่า 2,500,000 คน','กว่า 3,000,000 คน'], ans:2},
+  {q:'ข้อใดต่อไปนี้ไม่ใช่กลุ่มผู้ใช้บริการ DLTV?',
+   opts:['โรงเรียนขนาดเล็กในพื้นที่ห่างไกล','โรงเรียนสังกัดตำรวจตระเวนชายแดน','โรงเรียนประจำจังหวัด ที่มีครูครบชั้น','โรงเรียนที่ประสบปัญหาขาดแคลนครู'], ans:2},
+  {q:'ท่านสามารถรับชมการศึกษาทางไกล DLTV ผ่านช่องทางใดบ้าง?',
+   opts:['โทรทัศน์ดาวเทียม Ku-Band (ช่อง 186–200)','เว็บไซต์ www.dltv.ac.th','ดูการ์ตูนได้ที่ช่อง ยูทูป "ครูตู้ DLTV"','ถูกทุกข้อ'], ans:3},
+  {q:'ข้อใดกล่าวถึง "วัตถุประสงค์สำคัญ" ของทุน DLTV ได้ถูกต้องที่สุด?',
+   opts:['เพื่อสนับสนุนเฉพาะค่าเล่าเรียนในระดับมัธยม','เพื่อให้นักเรียนศึกษาต่อจนจบปริญญาตรีและพัฒนาท้องถิ่น','เพื่อคัดเลือกนักเรียนที่มีฐานะดี','เพื่อให้โรงเรียนมีงบประมาณเพิ่มขึ้น'], ans:1},
+  {q:'นักเรียนทุนพระราชทานฯ ต้องรักษาผลการเรียนเฉลี่ยสะสม (ระดับมัธยมศึกษา) ไม่น้อยกว่าเท่าใด?',
+   opts:['2.00','2.25','2.50','3.00'], ans:2},
+  {q:'เงินทุนการศึกษา "ส่วนที่ 2" ใช้สำหรับอะไร?',
+   opts:['จ่ายให้สถานศึกษาในส่วนที่เรียกเก็บจากนักเรียนทุน','ค่าใช้จ่ายในการครองชีพของนักเรียน','ค่าใช้จ่ายฉุกเฉินของโรงเรียน','เงินรางวัลผลการเรียนดี'], ans:1},
+  {q:'ข้อใด "ไม่ถูกต้อง" เกี่ยวกับเงื่อนไขของนักเรียนทุนพระราชทานฯ?',
+   opts:['ต้องเข้าร่วมกิจกรรมที่มูลนิธิกำหนด','สามารถกู้ กยศ. ได้','ต้องเรียนต่อเนื่องจนจบตามหลักสูตร','ต้องใช้เงินทุนอย่างคุ้มค่า'], ans:1},
+  {q:'หากนักเรียนทุนพระราชทานฯ ไม่สามารถรักษาผลการเรียนตามเกณฑ์ จะเกิดอะไรขึ้น?',
+   opts:['ถูกตัดสิทธิ์ทันที','ได้รับโอกาสปรับปรุง 1 ปี','ต้องเปลี่ยนโรงเรียน','ได้รับเงินเพิ่ม'], ans:1}
+];
+const QsPreStudent = QsPreStudentRaw.map((item, idx) => ({ q: (idx+1) + '. ' + item.q, opts: item.opts, ans: item.ans }));
+function shiftOptionsAndAnswer(q) {
+  const newOpts = [q.opts[3], q.opts[0], q.opts[1], q.opts[2]];
+  const newAns = (q.ans + 1) % 4;
+  let cleanQ = q.q.replace(/^\d+\.\s*/, '');
+  return { q: cleanQ, opts: newOpts, ans: newAns };
+}
+const studentShuffleOrder = [5,12,2,8,14,0,10,6,13,3,9,1,11,4,7];
+const QsPostStudentRaw = studentShuffleOrder.map(idx => shiftOptionsAndAnswer(QsPreStudentRaw[idx]));
+const QsPostStudent = QsPostStudentRaw.map((item, idx) => ({ q: (idx+1) + '. ' + item.q, opts: item.opts, ans: item.ans }));
+
+const QsPreTeacherRaw = [
+  ...QsPreStudentRaw.slice(0,10),
+  {q:'ข้อใดเป็น "คุณสมบัติสำคัญ" ของครูผู้ดูแลนักเรียนทุนพระราชทานฯ', opts:['เป็นครูอัตราจ้าง เนื่องจากมีภาระงานไม่มาก','มีความสัมพันธ์ที่ดีและนักเรียนไว้วางใจ','สอนเฉพาะวิชาหลัก','ไม่จำเป็นต้องติดตามนักเรียน'], ans:1},
+  {q:'ครูผู้ดูแลต้องติดตามข้อมูลด้านใดของนักเรียนทุนพระราชทานฯ', opts:['เฉพาะผลการเรียน','เฉพาะพฤติกรรม','เฉพาะการใช้เงิน','ผลการเรียน ความประพฤติ และการใช้เงิน'], ans:3},
+  {q:'ข้อใดเป็นหน้าที่ด้านธุรการของครูผู้ดูแล', opts:['สอนพิเศษให้นักเรียน','จัดทำข้อมูลนักเรียนทุนประจำปี','จัดกิจกรรมกีฬา','ดูแลอาคารสถานที่'], ans:1},
+  {q:'บัญชีเงินค่าครองชีพของนักเรียนทุนมีลักษณะอย่างไร', opts:['นักเรียนถือบัญชีคนเดียว','ครูถือบัญชีคนเดียว','นักเรียนและครูลงนามร่วมกัน โดยครูเก็บสมุดบัญชี','โรงเรียนเป็นผู้ถือบัญชี'], ans:2},
+  {q:'เมื่อนักเรียนทุนพระราชทานฯ ย้ายโรงเรียน ครูที่ปรึกษาต้องดำเนินการอย่างไร', opts:['แจ้งให้นักเรียนดำเนินการเองทั้งหมด','เก็บข้อมูลนักเรียนไว้ที่โรงเรียนเดิมโดยไม่ต้องแจ้งใคร','ประสานงานและส่งต่อข้อมูลนักเรียนทุนไปยังสถานศึกษาแห่งใหม่','รอให้มูลนิธิติดต่อมา'], ans:2},
+  {q:'หากนักเรียนทุนมีผลการเรียนต่ำกว่าที่กำหนด สำหรับการเป็นนักเรียนทุน ครูที่ปรึกษาควรดำเนินการอย่างไร (เลือกข้อที่เหมาะสมมากที่สุดต่อการส่งเสริมให้นักเรียนทุนสามารถคงสภาพการเป็นนักเรียนทุนต่อไปได้)', opts:['แจ้งผู้ปกครองและติดตามผลการเรียนอย่างใกล้ชิดทันที','วิเคราะห์สาเหตุร่วมกับนักเรียน วางแผนช่วยเหลือ ติดตามผล หากผลการเรียนไม่ดีขึ้นในระดับผ่านเกณฑ์การรับทุน รายงานผู้บริหารเพื่อหาทางแก้ไขต่อไป','รายงานผู้บริหารโรงเรียนทันทีเพื่อพิจารณาแนวทางช่วยเหลือ','แนะนำให้นักเรียนเข้าร่วมกิจกรรมเสริมการเรียนตามความสมัครใจ'], ans:1},
+  {q:'หากนักเรียนทุนมีพฤติกรรมไม่เหมาะสมต่อการเป็นนักเรียนทุน ครูที่ปรึกษาควรดำเนินการอย่างไร (เลือกข้อที่เหมาะสมมากที่สุดต่อการส่งเสริมให้นักเรียนทุนสามารถคงสภาพการเป็นนักเรียนทุนต่อไปได้)', opts:['แจ้งผู้ปกครองทันทีเพื่อให้ช่วยควบคุมพฤติกรรม','บันทึกพฤติกรรมและรายงานผู้บริหารโรงเรียน','พูดคุยสอบถามสาเหตุกับนักเรียน ให้คำแนะนำ/พิจารณาลงโทษตามความเหมาะสม หากพฤติกรรมของนักเรียนไม่เหมาะสมเป็นอย่างมาก ซึ่งส่งผลกระทบต่อการเป็นนักเรียนทุน ให้รายงานผู้บริหารเพื่อหาทางแก้ไขต่อไป','ลงโทษตามระเบียบของโรงเรียน'], ans:2},
+  {q:'กรณีนักเรียนทุน มีปัญหาด้าน "การเรียน ความประพฤติ การใช้เงิน" ครูที่ปรึกษาได้ช่วยเหลือขั้นต้นแล้วไม่สามารถแก้ไขได้ และมีแนวโน้มว่านักเรียนทุนผู้นั้น "อาจจะพ้นสภาพการเป็นนักเรียนทุน" จากสาเหตุดังกล่าว ครูที่ปรึกษาควรรายงานผู้บริหาร เพื่อให้โรงเรียนดำเนินการอย่างไร', opts:['ให้โรงเรียนแจ้งผู้ปกครองเพื่อให้ช่วยกำกับดูแล หาทางแก้ไข','แจ้งโรงเรียนทราบ หาแนวทางแก้ไขในระดับโรงเรียน เพื่อส่งเสริมให้นักเรียนทุนสามารถคงสภาพการเป็นนักเรียนทุนต่อไปได้','ให้โรงเรียนรายงาน "แนวโน้มการพ้นสภาพของนักเรียนทุน" และวิธี/แนวทางการแก้ไขปัญหาในระดับโรงเรียนให้มูลนิธิการศึกษาทางไกลผ่านดาวเทียมฯ ทราบ เพื่อพิจารณาการแก้ปัญหาเป็นลำดับต่อไป','ต้องทำทั้งข้อ ก. ข. และ ค.'], ans:3}
+];
+const QsPreTeacher = QsPreTeacherRaw.map((item, idx) => ({ q: (idx+1) + '. ' + item.q, opts: item.opts, ans: item.ans }));
+const teacherShuffleOrder = [13,5,17,2,9,0,15,7,11,4,16,1,14,6,10,3,12,8];
+const QsPostTeacherRaw = teacherShuffleOrder.map(idx => shiftOptionsAndAnswer(QsPreTeacherRaw[idx]));
+const QsPostTeacher = QsPostTeacherRaw.map((item, idx) => ({ q: (idx+1) + '. ' + item.q, opts: item.opts, ans: item.ans }));
+
+let role = '', phase = '', cur = 0, userName = '';
+let answers = { pre: [], post: [] };
+const LTR = ['ก','ข','ค','ง'];
+function totalQs() { return role === 'teacher' ? 18 : 15; }
+function getQuestions(phase) {
+  if (role === 'student') return phase === 'pre' ? QsPreStudent : QsPostStudent;
+  else return phase === 'pre' ? QsPreTeacher : QsPostTeacher;
+}
+function initAnswersArray(p) { answers[p] = new Array(totalQs()).fill(-1); }
+function calcScore(p) {
+  const Qs = getQuestions(p);
+  return answers[p].reduce((s,a,i) => s + (a === Qs[i].ans ? 1 : 0), 0);
+}
+
+// ========== ฟังก์ชันติดต่อ Google Sheets ผ่าน Web App ==========
+async function cloudFetch(action, params = {}) {
+  const url = new URL(SCRIPT_URL);
+  url.searchParams.append('action', action);
+  Object.keys(params).forEach(k => url.searchParams.append(k, params[k]));
+  try {
+    const resp = await fetch(url.toString(), { method: 'GET' });
+    return await resp.json();
+  } catch(e) {
+    console.error(e);
+    return null;
+  }
+}
+
+async function getSeqRecord(num, currentRole) {
+  if (!currentRole) return null;
+  const all = await cloudFetch('fetch');
+  if (!all || !Array.isArray(all)) return null;
+  return all.find(r => r.seqNum == num && r.role === currentRole) || null;
+}
+
+async function saveResultToGlobal() {
+  const num = parseInt(userName);
+  const preScore = answers.pre.some(a=>a>=0) ? calcScore('pre') : null;
+  const postScore = answers.post.some(a=>a>=0) ? calcScore('post') : null;
+  const now = new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});
+  const preAnswersJson = answers.pre.some(a=>a>=0) ? JSON.stringify(answers.pre) : null;
+  const postAnswersJson = answers.post.some(a=>a>=0) ? JSON.stringify(answers.post) : null;
+  
+  const params = {
+    seqNum: num,
+    role: role,
+    preScore: preScore !== null ? preScore : 'null',
+    preAnswers: preAnswersJson !== null ? preAnswersJson : 'null',
+    postScore: postScore !== null ? postScore : 'null',
+    postAnswers: postAnswersJson !== null ? postAnswersJson : 'null',
+    date: now,
+    postDate: postScore !== null ? now : 'null'
+  };
+  await cloudFetch('save', params);
+}
+
+async function fetchAllRecords() {
+  const data = await cloudFetch('fetch');
+  if (!data || !Array.isArray(data)) return [];
+  // แปลงข้อมูลให้เป็นรูปแบบที่ใช้ในโค้ดเดิม
+  return data.map(r => ({
+    seqNum: parseInt(r.seqNum),
+    role: r.role,
+    pre: r.preScore ? parseInt(r.preScore) : null,
+    preAnswers: r.preAnswers ? JSON.parse(r.preAnswers) : null,
+    post: r.postScore ? parseInt(r.postScore) : null,
+    postAnswers: r.postAnswers ? JSON.parse(r.postAnswers) : null,
+    date: r.date,
+    postDate: r.postDate
+  }));
+}
+
+async function deleteAllRecords() {
+  await cloudFetch('clear');
+}
+
+// ========== ฟังก์ชัน UI (ปรับ async บ้าง) ==========
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+async function updBtn() {
+  const val = document.getElementById('name-input').value.trim();
+  const num = parseInt(val);
+  const valid = !isNaN(num) && num >= 1 && num <= 72 && role !== '';
+  const btnEl = document.getElementById('home-start');
+  btnEl.disabled = !valid;
+  if (valid) {
+    const rec = await getSeqRecord(num, role);
+    if (rec && rec.pre !== null && rec.post === null) btnEl.textContent = 'เริ่มทำ Posttest →';
+    else if (rec && rec.pre !== null && rec.post !== null) btnEl.textContent = 'ดูผลการทดสอบ →';
+    else btnEl.textContent = 'เริ่มทำ Pretest →';
+  } else btnEl.textContent = 'เริ่มทำแบบทดสอบ →';
+}
+
+async function checkStatus() {
+  const val = document.getElementById('name-input').value.trim();
+  const num = parseInt(val);
+  const statusEl = document.getElementById('seq-status');
+  if (val === '' || isNaN(num) || num < 1 || num > 72) { statusEl.className = 'seq-status'; userName = ''; updBtn(); return; }
+  userName = val;
+  if (!role) { statusEl.className = 'seq-status show seq-none'; statusEl.innerHTML = 'ℹ️ กรุณาเลือกประเภท <strong>(นักเรียน/ครู)</strong> ด้านล่างเพื่อตรวจสอบสถานะ'; updBtn(); return; }
+  const rec = await getSeqRecord(num, role);
+  statusEl.className = 'seq-status show';
+  const roleName = role === 'student' ? 'นักเรียน' : 'ครู';
+  const maxQ = totalQs();
+  if (!rec || rec.pre === null) { statusEl.className = 'seq-status show seq-none'; statusEl.innerHTML = `ℹ️ ลำดับที่ ${num} (${roleName}) ยังไม่ได้ทำ Pretest → จะเริ่มด้วย <strong>Pretest</strong>`; }
+  else if (rec.pre !== null && rec.post === null) { statusEl.className = 'seq-status show seq-pre-done'; statusEl.innerHTML = `✅ ${roleName} ทำ Pretest แล้ว (${rec.pre}/${maxQ} คะแนน) → จะข้ามไปทำ <strong>Posttest</strong>`; }
+  else { statusEl.className = 'seq-status show seq-all-done'; statusEl.innerHTML = `🏆 ${roleName} ทำครบแล้ว! Pre: ${rec.pre} Post: ${rec.post} (จาก ${maxQ} คะแนน)`; }
+  updBtn();
+}
+
+function selectRole(r) { role = r; document.getElementById('rc-student').classList.toggle('active', r === 'student'); document.getElementById('rc-teacher').classList.toggle('active', r === 'teacher'); checkStatus(); }
+
+async function handleStart() {
+  const val = document.getElementById('name-input').value.trim();
+  const num = parseInt(val);
+  if (!val || isNaN(num) || num < 1 || num > 72) { document.getElementById('name-input').classList.add('err'); document.getElementById('name-err').classList.add('show'); document.getElementById('name-input').focus(); return; }
+  if (!role) { alert('กรุณาเลือกประเภท (นักเรียน/ครู)'); return; }
+  userName = val;
+  const rec = await getSeqRecord(num, role);
+  const maxQ = totalQs();
+  if (rec && rec.pre !== null && rec.post !== null) {
+    answers.pre = rec.preAnswers || new Array(maxQ).fill(-1);
+    answers.post = rec.postAnswers || new Array(maxQ).fill(-1);
+    showDashboard();
+    return;
+  }
+  if (rec && rec.pre !== null && rec.post === null) startExam('post');
+  else startExam('pre');
+}
+
+function startExam(p) {
+  phase = p; cur = 0; initAnswersArray(p);
+  const pill = document.getElementById('phase-pill'), fill = document.getElementById('prog-fill');
+  if (p === 'pre') { pill.className = 'phase-pill phase-pre'; document.getElementById('phase-label').textContent = 'PRE TEST'; fill.className = 'prog-fill pre-p'; }
+  else { pill.className = 'phase-pill phase-post'; document.getElementById('phase-label').textContent = 'POST TEST'; fill.className = 'prog-fill post-p'; }
+  show('s-quiz'); renderQ();
+}
+
+function renderQ() {
+  const Qs = getQuestions(phase), total = Qs.length, q = Qs[cur];
+  document.getElementById('prog-fill').style.width = ((cur+1)/total*100).toFixed(0)+'%';
+  document.getElementById('prog-label').textContent = (cur+1)+' / '+total;
+  document.getElementById('q-num').textContent = 'ข้อที่ '+(cur+1)+' จาก '+total;
+  document.getElementById('q-text').textContent = q.q;
+  const sel = answers[phase][cur];
+  document.getElementById('opts').innerHTML = q.opts.map((o, i) => `<button class="opt${sel===i?' sel':''}" data-opt-index="${i}"><span class="opt-ltr">${LTR[i]}</span><span class="opt-txt">${o}</span></button>`).join('');
+  const prevBtn = document.getElementById('btn-prev');
+  prevBtn.disabled = (cur === 0);
+  const nb = document.getElementById('btn-next');
+  nb.textContent = cur === total-1 ? (phase==='pre' ? 'ส่ง Pretest ✓' : 'ส่ง Posttest ✓') : 'ถัดไป →';
+  document.getElementById('ans-cnt').textContent = 'ตอบแล้ว '+answers[phase].filter(a=>a>=0).length+' / '+total+' ข้อ';
+  document.querySelectorAll('#opts .opt').forEach(btn => {
+    btn.removeEventListener('click', optClickHandler);
+    btn.addEventListener('click', optClickHandler);
+  });
+}
+function optClickHandler(e) { const idx = parseInt(e.currentTarget.dataset.optIndex); pick(idx); }
+function pick(i) { answers[phase][cur] = i; renderQ(); }
+function prevQ() { if (cur > 0) { cur--; renderQ(); window.scrollTo({top:0, behavior:'smooth'}); } }
+async function nextQ() {
+  const total = getQuestions(phase).length;
+  if (cur < total-1) { cur++; renderQ(); window.scrollTo({top:0, behavior:'smooth'}); }
+  else if (phase === 'pre') { await saveResultToGlobal(); showBetween(); }
+  else { await saveResultToGlobal(); showDashboard(); }
+}
+function showBetween() {
+  const score = calcScore('pre'), maxQ = totalQs();
+  document.getElementById('ring-num').textContent = score;
+  document.getElementById('ring-circle').style.strokeDashoffset = 389 * (1 - score/maxQ);
+  document.getElementById('bw-name').textContent = 'ลำดับทุนที่ '+userName;
+  document.getElementById('bw-score').textContent = 'ได้คะแนน '+score+' / '+maxQ+' คะแนน  ('+Math.round(score/maxQ*100)+'%)';
+  show('s-between');
+}
+function showDashboard() {
+  const pre = calcScore('pre'), post = calcScore('post'), diff = post-pre;
+  const maxQ = totalQs(), prePct = Math.round(pre/maxQ*100), postPct = Math.round(post/maxQ*100), diffPct = diff !== 0 ? Math.round(diff/maxQ*100) : 0;
+  document.getElementById('full-score-indicator').textContent = maxQ;
+  document.getElementById('d-badge').textContent = role==='student' ? '👩‍🎓 นักเรียน' : '👨‍🏫 ครู';
+  document.getElementById('d-name').textContent = 'ลำดับทุนที่ '+userName;
+  document.getElementById('d-date').innerHTML = 'วันที่ทดสอบ<br>'+new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('d-pre').innerHTML = `${pre}<span style="font-size:16px; margin-left:6px;">(${prePct}%)</span>`;
+  document.getElementById('d-post').innerHTML = `${post}<span style="font-size:16px; margin-left:6px;">(${postPct}%)</span>`;
+  const diffSign = diff>0 ? '+' : (diff<0 ? '' : '');
+  document.getElementById('d-diff').innerHTML = `${diffSign}${diff}<span style="font-size:16px; margin-left:6px;">(${diffPct>0?'+':''}${diffPct}%)</span>`;
+  document.getElementById('d-pre-pct').textContent = ''; document.getElementById('d-post-pct').textContent = ''; document.getElementById('d-diff-pct').textContent = '';
+  document.getElementById('lbl-pre').textContent = pre+' / '+maxQ; document.getElementById('lbl-post').textContent = post+' / '+maxQ;
+  setTimeout(() => { document.getElementById('bar-pre').style.width = prePct+'%'; document.getElementById('bar-pre').textContent = pre; document.getElementById('bar-post').style.width = postPct+'%'; document.getElementById('bar-post').textContent = post; }, 300);
+  document.getElementById('pct-pre').textContent = prePct+'%'; document.getElementById('pct-post').textContent = postPct+'%';
+  let chip = ''; if(diff>0) chip=`<div class="diff-chip dc-up">📈 พัฒนาขึ้น +${diff} คะแนน (+${diffPct}%)</div>`; else if(diff<0) chip=`<div class="diff-chip dc-down">📉 ลดลง ${Math.abs(diff)} คะแนน (${diffPct}%)</div>`; else chip=`<div class="diff-chip dc-same">➡️ คะแนนเท่าเดิม</div>`;
+  document.getElementById('diff-chip-wrap').innerHTML = chip;
+  renderAnsList('al-pre','pre'); renderAnsList('al-post','post');
+  show('s-result'); setTimeout(drawRadar, 450);
+}
+function renderAnsList(elId, p) {
+  const Qs = getQuestions(p);
+  document.getElementById(elId).innerHTML = Qs.map((q,i) => { const ua = answers[p][i], ca = q.ans, ok = ua === ca; return `<div class="ans-item ${ok?'ai-ok':'ai-fail'}"><span class="ai-num">${i+1}.</span><span class="ai-body">ตอบ: <strong>${ua>=0?LTR[ua]:'—'}</strong> · เฉลย: <strong>${LTR[ca]}</strong> ${ok ? '<span style="color:#3D9E65"> ✓ ถูกต้อง</span>' : '<span style="color:#C45E8A"> ✗ ผิด</span>'}</span></div>`; }).join('');
+}
+function toggleAns(p) { document.getElementById('tg-'+p).classList.toggle('open'); document.getElementById('al-'+p).classList.toggle('open'); }
+function resetAll() {
+  role = ''; phase = ''; cur = 0; userName = ''; answers = { pre: [], post: [] };
+  document.getElementById('rc-student').classList.remove('active');
+  document.getElementById('rc-teacher').classList.remove('active');
+  document.getElementById('name-input').value = '';
+  document.getElementById('name-input').classList.remove('err');
+  document.getElementById('name-err').classList.remove('show');
+  document.getElementById('seq-status').className = 'seq-status';
+  document.getElementById('home-start').disabled = true;
+  document.getElementById('home-start').textContent = 'เริ่มทำแบบทดสอบ →';
+  document.getElementById('ring-circle').style.strokeDashoffset = 389;
+  document.getElementById('bar-pre').style.width = '0%';
+  document.getElementById('bar-post').style.width = '0%';
+  show('s-home');
+}
+function drawRadar() {
+  const canvas = document.getElementById('radarCanvas'); if (!canvas) return;
+  const ctx = canvas.getContext('2d'); const W = canvas.width, H = canvas.height; ctx.clearRect(0, 0, W, H);
+  const isTeacher = role === 'teacher';
+  let groups = isTeacher ? [{label:'ข้อ 1–4', qs:[0,1,2,3]},{label:'ข้อ 5–8', qs:[4,5,6,7]},{label:'ข้อ 9–12', qs:[8,9,10,11]},{label:'ข้อ 13–15', qs:[12,13,14]},{label:'ข้อ 16–18', qs:[15,16,17]}] : [{label:'ข้อ 1–3', qs:[0,1,2]},{label:'ข้อ 4–6', qs:[3,4,5]},{label:'ข้อ 7–9', qs:[6,7,8]},{label:'ข้อ 10–12', qs:[9,10,11]},{label:'ข้อ 13–15', qs:[12,13,14]}];
+  const n = groups.length, cx = W/2, cy = H/2+8, R = Math.min(W,H)*0.36;
+  const ang = i => (Math.PI*2/n)*i - Math.PI/2;
+  [1,2,3].forEach(r => { ctx.beginPath(); for(let i=0;i<n;i++){ const a=ang(i), x=cx+R*(r/3)*Math.cos(a), y=cy+R*(r/3)*Math.sin(a); i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y); } ctx.closePath(); ctx.strokeStyle = r===3 ? 'rgba(0,0,0,0.12)' : 'rgba(0,0,0,0.06)'; ctx.lineWidth = 1; ctx.stroke(); });
+  for(let i=0;i<n;i++){ ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+R*Math.cos(ang(i)), cy+R*Math.sin(ang(i))); ctx.strokeStyle = 'rgba(0,0,0,0.09)'; ctx.lineWidth = 1; ctx.stroke(); }
+  function drawShape(p, color, fillColor) { const Qs = getQuestions(p); const scores = groups.map(g => g.qs.filter(q => answers[p][q] === Qs[q].ans).length / g.qs.length); ctx.beginPath(); scores.forEach((s,i)=>{ const a=ang(i), x=cx+R*s*Math.cos(a), y=cy+R*s*Math.sin(a); i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y); }); ctx.closePath(); ctx.fillStyle = fillColor; ctx.fill(); ctx.strokeStyle = color; ctx.lineWidth = 2.5; ctx.stroke(); scores.forEach((s,i)=>{ const a=ang(i), x=cx+R*s*Math.cos(a), y=cy+R*s*Math.sin(a); ctx.beginPath(); ctx.arc(x,y,5,0,Math.PI*2); ctx.fillStyle = color; ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x,y,2.5,0,Math.PI*2); ctx.fill(); }); }
+  drawShape('pre', '#F5A623', 'rgba(245,166,35,0.15)'); drawShape('post', '#27AE60', 'rgba(39,174,96,0.18)');
+  ctx.font = '13px "Noto Sans Thai", sans-serif'; ctx.fillStyle = '#5A5370'; ctx.textAlign = 'center';
+  groups.forEach((g,i)=>{ const a=ang(i), x=cx+(R+24)*Math.cos(a), y=cy+(R+24)*Math.sin(a); ctx.fillText(g.label, x, y+5); });
+}
+function printResult() {
+  const pre = calcScore('pre'), post = calcScore('post'), diff = post-pre, maxQ = totalQs(), rLabel = role==='student' ? 'นักเรียน' : 'ครู', dateStr = new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});
+  const QsPreFull = getQuestions('pre'), QsPostFull = getQuestions('post');
+  const win = window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>ผลการทดสอบ · ลำดับที่ ${userName}</title><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet"><style>body{font-family:'Noto Sans Thai',sans-serif;padding:40px;color:#2D2640;max-width:680px;margin:auto;background:#FBF9FF;font-size:16px}h1{font-size:26px;font-weight:600;margin-bottom:6px}.meta{font-size:15px;color:#9A92B0;margin-bottom:24px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0 28px}.box{padding:18px 14px;border-radius:16px;text-align:center}.box.pre{background:#FFF9E8;border:1px solid rgba(196,154,26,0.2)}.box.post{background:#E8F9EF;border:1px solid rgba(61,158,101,0.2)}.box.d{background:#EDEAFF;border:1px solid rgba(124,109,181,0.2)}.num{font-size:32px;font-weight:600}.num.pre{color:#C49A1A}.num.post{color:#3D9E65}.num.d{color:#7C6DB5}.lbl{font-size:13px;color:#9A92B0;margin-bottom:8px;letter-spacing:0.5px}.pct{font-size:14px;margin-top:5px;color:#9A92B0}h2{font-size:18px;font-weight:600;margin:24px 0 12px;padding-bottom:8px;border-bottom:1px solid #eee}table{width:100%;border-collapse:collapse;font-size:15px}td{padding:8px 12px;border-bottom:1px solid rgba(0,0,0,0.05)}.ok{color:#3D9E65;font-weight:500}.fail{color:#C45E8A;font-weight:500}@media print{button{display:none}}</style></head><body><h1>สรุปผลการทดสอบ · ${rLabel}</h1><div class="meta">ลำดับทุนที่: <strong>${userName}</strong>  ·  วันที่: ${dateStr}  ·  มูลนิธิการศึกษาทางไกลผ่านดาวเทียม ในพระบรมราชูปถัมภ์</div><div class="grid"><div class="box pre"><div class="lbl">PRETEST</div><div class="num pre">${pre}</div><div class="pct">${Math.round(pre/maxQ*100)}%</div></div><div class="box post"><div class="lbl">POSTTEST</div><div class="num post">${post}</div><div class="pct">${Math.round(post/maxQ*100)}%</div></div><div class="box d"><div class="lbl">พัฒนาขึ้น</div><div class="num d">${diff>=0?'+':''}${diff}</div><div class="pct">${diff>0?'📈':diff<0?'📉':'➡️'}</div></div></div><h2>รายละเอียด Pretest</h2><table>${QsPreFull.map((q,i)=>{const ua=answers.pre[i],ca=q.ans,ok=ua===ca;return`<tr><td>${i+1}</td><td>ตอบ: ${ua>=0?LTR[ua]:'—'}</td><td>เฉลย: ${LTR[ca]}</td><td class="${ok?'ok':'fail'}">${ok?'✓ ถูก':'✗ ผิด'}</td></tr>`;}).join('')}</table><h2>รายละเอียด Posttest</h2><table>${QsPostFull.map((q,i)=>{const ua=answers.post[i],ca=q.ans,ok=ua===ca;return`<tr><td>${i+1}</td><td>ตอบ: ${ua>=0?LTR[ua]:'—'}</td><td>เฉลย: ${LTR[ca]}</td><td class="${ok?'ok':'fail'}">${ok?'✓ ถูก':'✗ ผิด'}</td></tr>`;}).join('')}</table><p style="margin-top:32px;font-size:12px;color:#ccc">พิมพ์เมื่อ: ${new Date().toLocaleString('th-TH')}</p><button onclick="window.print()" style="margin-top:16px;padding:12px 28px;background:#7C6DB5;color:#fff;border:none;border-radius:10px;cursor:pointer;font-family:'Noto Sans Thai',sans-serif;font-size:16px">🖨️ พิมพ์</button></body></html>`);
+  win.document.close();
+}
+async function showOverallData() {
+  const records = await fetchAllRecords();
+  const contentEl = document.getElementById('overall-content');
+  if (records.length === 0) { contentEl.innerHTML = `<div style="text-align:center; color:var(--text-light); padding:2rem 0;">ยังไม่มีข้อมูลผู้ทำแบบทดสอบในระบบ</div>`; show('s-overall'); return; }
+  const sorted = [...records].sort((a,b) => { if (a.seqNum === b.seqNum) return a.role.localeCompare(b.role); return a.seqNum - b.seqNum; });
+  const students = sorted.filter(r => r.role === 'student');
+  const teachers = sorted.filter(r => r.role === 'teacher');
+  const getAvg = (arr, type) => {
+    const valid = arr.filter(r => r[type] !== null);
+    if (valid.length === 0) return { avg: '-', pct: '' };
+    const sum = valid.reduce((s,r)=>s+r[type],0);
+    const avgNum = sum / valid.length;
+    const maxQ = arr.length ? (arr[0].role === 'teacher' ? 18 : 15) : 15;
+    const pct = Math.round(avgNum / maxQ * 100);
+    return { avg: avgNum.toFixed(1), pct: `${pct}%` };
+  };
+  const allPre = getAvg(sorted, 'pre'); const allPost = getAvg(sorted, 'post');
+  const stuPre = getAvg(students, 'pre'); const stuPost = getAvg(students, 'post');
+  const teaPre = getAvg(teachers, 'pre'); const teaPost = getAvg(teachers, 'post');
+  const maxQStudent = 15, maxQTeacher = 18;
+  const tableRows = sorted.map(r => {
+    const roleLabel = r.role === 'student' ? '🎒 นักเรียน' : '👨‍🏫 ครู';
+    const maxQ = r.role === 'teacher' ? maxQTeacher : maxQStudent;
+    const preScore = r.pre !== null ? r.pre : '-';
+    const prePct = r.pre !== null ? `${Math.round(r.pre/maxQ*100)}%` : '';
+    const postScore = r.post !== null ? r.post : '-';
+    const postPct = r.post !== null ? `${Math.round(r.post/maxQ*100)}%` : '';
+    const diff = (r.pre !== null && r.post !== null) ? r.post - r.pre : null;
+    const diffHtml = diff !== null ? `<span class="${diff>=0?'diff-positive':'diff-negative'}">${diff>=0?'+':''}${diff}</span>` : '—';
+    let statusClass = '', statusText = '';
+    if (r.pre !== null && r.post !== null) { statusClass = 'status-complete'; statusText = '✅ ครบ'; }
+    else if (r.pre !== null && r.post === null) { statusClass = 'status-waitpost'; statusText = '🔶 รอ Post'; }
+    else { statusClass = 'status-waitpre'; statusText = '⬜ รอ Pre'; }
+    return `<tr><td>${r.seqNum}</td><td><span class="role-badge">${roleLabel}</span></td><td>${preScore} ${prePct ? `<span style="font-size:12px;">(${prePct})</span>` : ''}</td><td>${postScore} ${postPct ? `<span style="font-size:12px;">(${postPct})</span>` : ''}</td><td>${diffHtml}</td><td><span class="status-badge ${statusClass}">${statusText}</span></td></tr>`;
+  }).join('');
+  contentEl.innerHTML = `
+    <div class="overall-stats-grid">
+      <div class="stat-card-overall"><div class="stat-title">👥 ทั้งหมด</div><div class="stat-count">${sorted.length} คน</div><div class="stat-scores"><div class="stat-pre">Pre: <span>${allPre.avg}</span> ${allPre.pct}</div><div class="stat-post">Post: <span>${allPost.avg}</span> ${allPost.pct}</div></div></div>
+      <div class="stat-card-overall"><div class="stat-title">🎒 นักเรียน</div><div class="stat-count">${students.length} คน</div><div class="stat-scores"><div class="stat-pre">Pre: <span>${stuPre.avg}</span> ${stuPre.pct}</div><div class="stat-post">Post: <span>${stuPost.avg}</span> ${stuPost.pct}</div></div></div>
+      <div class="stat-card-overall"><div class="stat-title">👨‍🏫 ครู</div><div class="stat-count">${teachers.length} คน</div><div class="stat-scores"><div class="stat-pre">Pre: <span>${teaPre.avg}</span> ${teaPre.pct}</div><div class="stat-post">Post: <span>${teaPost.avg}</span> ${teaPost.pct}</div></div></div>
+    </div>
+    <div class="overall-table-wrapper">
+      <table class="overall-table">
+        <thead><tr><th>ลำดับ</th><th>ประเภท</th><th>Pre (คะแนน)</th><th>Post (คะแนน)</th><th>Diff</th><th>สถานะ</th></tr></thead>
+        <tbody>${tableRows}</tbody>
+      </table>
+    </div>`;
+  show('s-overall');
+}
+async function exportExcel() {
+  const records = await fetchAllRecords();
+  if (records.length === 0) { alert('ไม่มีข้อมูล'); return; }
+  const sorted = records.sort((a,b) => { if (a.seqNum === b.seqNum) return a.role.localeCompare(b.role); return a.seqNum - b.seqNum; });
+  const header = ['ลำดับทุน','ประเภท','Pretest (คะแนน)','Pretest (%)','Posttest (คะแนน)','Posttest (%)','พัฒนาขึ้น','วันที่ Pretest','วันที่ Posttest'];
+  const rows = sorted.map(r => {
+    const roleLabel = r.role==='student' ? 'นักเรียน' : 'ครู';
+    const maxQ = r.role === 'teacher' ? 18 : 15;
+    const prePct = r.pre !== null ? Math.round(r.pre/maxQ*100)+'%' : '';
+    const postPct = r.post !== null ? Math.round(r.post/maxQ*100)+'%' : '';
+    const diff = (r.pre !== null && r.post !== null) ? (r.post-r.pre >= 0 ? '+' : '')+(r.post-r.pre) : '';
+    return [ r.seqNum, roleLabel, r.pre !== null ? r.pre : '', prePct, r.post !== null ? r.post : '', postPct, diff, r.date || '', r.postDate || '' ];
+  });
+  const csvContent = [header, ...rows].map(row => row.map(cell => '"'+String(cell).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const bom = '\uFEFF'; const blob = new Blob([bom + csvContent], {type: 'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'ผลการทดสอบ_DLTV_' + new Date().toISOString().slice(0,10) + '.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+async function clearOverallData() {
+  // แสดง modal ขอ username/password
+  const overlay = document.getElementById('auth-overlay');
+  const usernameInput = document.getElementById('auth-username');
+  const passwordInput = document.getElementById('auth-password');
+  const errEl = document.getElementById('auth-err');
+  // รีเซ็ต modal
+  usernameInput.value = '';
+  passwordInput.value = '';
+  usernameInput.classList.remove('err');
+  passwordInput.classList.remove('err');
+  errEl.classList.remove('show');
+  overlay.classList.remove('hidden');
+  usernameInput.focus();
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('rc-student').addEventListener('click', () => selectRole('student'));
+  document.getElementById('rc-teacher').addEventListener('click', () => selectRole('teacher'));
+  const nameInput = document.getElementById('name-input');
+  nameInput.addEventListener('input', () => { document.getElementById('name-err').classList.remove('show'); nameInput.classList.remove('err'); checkStatus(); });
+  document.getElementById('home-start').addEventListener('click', handleStart);
+  document.getElementById('overall-btn').addEventListener('click', showOverallData);
+  document.getElementById('continue-post').addEventListener('click', () => startExam('post'));
+  document.getElementById('reset-home').addEventListener('click', resetAll);
+  document.getElementById('exit-to-home-from-between').addEventListener('click', resetAll);
+  document.getElementById('exit-to-home-from-quiz').addEventListener('click', resetAll);
+  document.getElementById('reset-from-result').addEventListener('click', resetAll);
+  document.getElementById('print-result').addEventListener('click', printResult);
+  document.getElementById('tg-pre').addEventListener('click', () => toggleAns('pre'));
+  document.getElementById('tg-post').addEventListener('click', () => toggleAns('post'));
+  document.getElementById('back-home-from-overall').addEventListener('click', () => show('s-home'));
+  document.getElementById('export-excel').addEventListener('click', exportExcel);
+  document.getElementById('clear-data').addEventListener('click', clearOverallData);
+
+  // Auth modal events
+  document.getElementById('auth-cancel').addEventListener('click', () => {
+    document.getElementById('auth-overlay').classList.add('hidden');
+  });
+  document.getElementById('auth-overlay').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('auth-overlay')) {
+      document.getElementById('auth-overlay').classList.add('hidden');
+    }
+  });
+  document.getElementById('auth-confirm').addEventListener('click', async () => {
+    const username = document.getElementById('auth-username').value.trim();
+    const password = document.getElementById('auth-password').value;
+    const errEl = document.getElementById('auth-err');
+    const uInput = document.getElementById('auth-username');
+    const pInput = document.getElementById('auth-password');
+    if (username === 'dukeza01' && password === 'Dukedikk01') {
+      document.getElementById('auth-overlay').classList.add('hidden');
+      await deleteAllRecords();
+      showOverallData();
+    } else {
+      uInput.classList.add('err');
+      pInput.classList.add('err');
+      errEl.classList.add('show');
+      pInput.value = '';
+      pInput.focus();
+    }
+  });
+  document.getElementById('auth-password').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') document.getElementById('auth-confirm').click();
+  });
+  const prevBtn = document.getElementById('btn-prev');
+  const nextBtn = document.getElementById('btn-next');
+  prevBtn.removeEventListener('click', prevQ);
+  nextBtn.removeEventListener('click', nextQ);
+  prevBtn.addEventListener('click', prevQ);
+  nextBtn.addEventListener('click', nextQ);
+});
+</script>
+<!-- AUTH MODAL -->
+<div class="auth-overlay hidden" id="auth-overlay">
+  <div class="auth-modal">
+    <div class="auth-modal-icon">🔐</div>
+    <div class="auth-modal-title">ยืนยันตัวตนผู้ดูแล</div>
+    <div class="auth-modal-sub">การล้างข้อมูลทั้งหมดต้องได้รับอนุญาตจากผู้ดูแลระบบเท่านั้น<br>กรุณาใส่ชื่อผู้ใช้และรหัสผ่าน</div>
+    <div class="auth-field">
+      <label class="auth-label">ชื่อผู้ใช้ (Username)</label>
+      <input class="auth-input" id="auth-username" type="text" placeholder="กรอก username" autocomplete="off">
+    </div>
+    <div class="auth-field">
+      <label class="auth-label">รหัสผ่าน (Password)</label>
+      <input class="auth-input" id="auth-password" type="password" placeholder="กรอก password" autocomplete="off">
+    </div>
+    <div class="auth-err" id="auth-err">❌ ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง</div>
+    <div class="auth-actions">
+      <button class="btn-auth-cancel" id="auth-cancel">ยกเลิก</button>
+      <button class="btn-auth-confirm" id="auth-confirm">🗑️ ยืนยันล้างข้อมูล</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
