@@ -276,83 +276,6 @@ body{font-family:'Noto Sans Thai',sans-serif;background:var(--bg-main);min-heigh
   background: rgba(0,0,0,0.1);
   transform: translateY(-2px);
 }
-
-/* AUTH MODAL */
-.auth-overlay {
-  position: fixed; inset: 0; z-index: 9999;
-  background: rgba(45,38,64,0.55);
-  backdrop-filter: blur(6px);
-  display: flex; align-items: center; justify-content: center;
-  padding: 1rem;
-  animation: fadeIn 0.2s ease;
-}
-.auth-overlay.hidden { display: none; }
-.auth-modal {
-  background: #fff;
-  border-radius: 28px;
-  padding: 2rem 1.8rem;
-  width: 100%; max-width: 400px;
-  box-shadow: 0 20px 60px rgba(45,38,64,0.25);
-  animation: slideUp 0.3s cubic-bezier(0.16,1,0.3,1);
-}
-.auth-modal-icon { font-size: 42px; text-align: center; margin-bottom: 10px; }
-.auth-modal-title {
-  font-family: 'Mitr', sans-serif;
-  font-size: 22px; font-weight: 600;
-  color: var(--text-dark);
-  text-align: center; margin-bottom: 6px;
-}
-.auth-modal-sub {
-  font-size: 14px; color: var(--text-light);
-  text-align: center; margin-bottom: 1.6rem; line-height: 1.6;
-}
-.auth-field { margin-bottom: 1.1rem; }
-.auth-label {
-  font-size: 14px; font-weight: 500;
-  color: var(--text-mid); margin-bottom: 6px; display: block;
-}
-.auth-input {
-  width: 100%; padding: 12px 16px;
-  border: 1.5px solid rgba(120,100,200,0.18);
-  border-radius: var(--rm);
-  background: rgba(255,255,255,0.9);
-  font-family: 'Noto Sans Thai', sans-serif;
-  font-size: 16px; color: var(--text-dark);
-  outline: none; transition: border-color 0.2s, box-shadow 0.2s;
-}
-.auth-input:focus {
-  border-color: var(--lavender-d);
-  box-shadow: 0 0 0 3px rgba(124,109,181,0.12);
-}
-.auth-input.err { border-color: var(--rose-d); box-shadow: 0 0 0 3px rgba(196,94,138,0.1); }
-.auth-err {
-  font-size: 13px; color: var(--rose-d);
-  margin-top: 8px; display: none;
-  padding: 8px 12px;
-  background: rgba(255,214,231,0.4);
-  border-radius: 8px; text-align: center;
-}
-.auth-err.show { display: block; }
-.auth-actions { display: flex; gap: 10px; margin-top: 1.5rem; }
-.btn-auth-cancel {
-  flex: 1; padding: 13px;
-  border: 1.5px solid rgba(120,100,200,0.2);
-  border-radius: var(--rm);
-  background: transparent; color: var(--text-mid);
-  font-family: 'Noto Sans Thai', sans-serif;
-  font-size: 16px; cursor: pointer; transition: all 0.2s;
-}
-.btn-auth-cancel:hover { background: #f5f3ff; border-color: var(--lavender-d); color: var(--lavender-d); }
-.btn-auth-confirm {
-  flex: 2; padding: 13px;
-  border: none; border-radius: var(--rm);
-  background: linear-gradient(135deg, #E84040, #C43030);
-  color: #fff; font-family: 'Mitr', sans-serif;
-  font-size: 16px; font-weight: 500;
-  cursor: pointer; transition: all 0.2s;
-  box-shadow: 0 4px 14px rgba(200,48,48,0.3);
-}
-.btn-auth-confirm:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(200,48,48,0.35); }
 </style>
 </head>
 <body>
@@ -602,11 +525,27 @@ async function cloudFetch(action, params = {}) {
   }
 }
 
+function _parseRecord(r) {
+  const parseScore = v => (v !== null && v !== undefined && v !== 'null' && v !== '') ? parseInt(v) : null;
+  const parseAnswers = v => (v && v !== 'null' && v !== '') ? (() => { try { return JSON.parse(v); } catch(e) { return null; } })() : null;
+  return {
+    seqNum: parseInt(r.seqNum),
+    role: r.role,
+    pre: parseScore(r.preScore),
+    preAnswers: parseAnswers(r.preAnswers),
+    post: parseScore(r.postScore),
+    postAnswers: parseAnswers(r.postAnswers),
+    date: r.date,
+    postDate: r.postDate
+  };
+}
+
 async function getSeqRecord(num, currentRole) {
   if (!currentRole) return null;
   const all = await cloudFetch('fetch');
   if (!all || !Array.isArray(all)) return null;
-  return all.find(r => r.seqNum == num && r.role === currentRole) || null;
+  const raw = all.find(r => r.seqNum == num && r.role === currentRole);
+  return raw ? _parseRecord(raw) : null;
 }
 
 async function saveResultToGlobal() {
@@ -633,17 +572,7 @@ async function saveResultToGlobal() {
 async function fetchAllRecords() {
   const data = await cloudFetch('fetch');
   if (!data || !Array.isArray(data)) return [];
-  // แปลงข้อมูลให้เป็นรูปแบบที่ใช้ในโค้ดเดิม
-  return data.map(r => ({
-    seqNum: parseInt(r.seqNum),
-    role: r.role,
-    pre: r.preScore ? parseInt(r.preScore) : null,
-    preAnswers: r.preAnswers ? JSON.parse(r.preAnswers) : null,
-    post: r.postScore ? parseInt(r.postScore) : null,
-    postAnswers: r.postAnswers ? JSON.parse(r.postAnswers) : null,
-    date: r.date,
-    postDate: r.postDate
-  }));
+  return data.map(r => _parseRecord(r));
 }
 
 async function deleteAllRecords() {
@@ -657,46 +586,138 @@ function show(id) {
   window.scrollTo({top: 0, behavior: 'smooth'});
 }
 
+let _checkStatusTimer = null;
+let _lastCheckedKey = '';
+
 async function updBtn() {
   const val = document.getElementById('name-input').value.trim();
   const num = parseInt(val);
   const valid = !isNaN(num) && num >= 1 && num <= 72 && role !== '';
   const btnEl = document.getElementById('home-start');
   btnEl.disabled = !valid;
-  if (valid) {
-    const rec = await getSeqRecord(num, role);
-    if (rec && rec.pre !== null && rec.post === null) btnEl.textContent = 'เริ่มทำ Posttest →';
-    else if (rec && rec.pre !== null && rec.post !== null) btnEl.textContent = 'ดูผลการทดสอบ →';
+  if (!valid) { btnEl.textContent = 'เริ่มทำแบบทดสอบ →'; return; }
+  // ดึง rec จาก cache ที่ checkStatus โหลดไว้แล้ว (ไม่ call API ซ้ำ)
+  const cacheKey = num + '|' + role;
+  const cached = _recCache[cacheKey];
+  if (cached !== undefined) {
+    if (cached && cached.pre !== null && cached.post === null) btnEl.textContent = 'เริ่มทำ Posttest →';
+    else if (cached && cached.pre !== null && cached.post !== null) btnEl.textContent = 'ดูผลการทดสอบ →';
     else btnEl.textContent = 'เริ่มทำ Pretest →';
-  } else btnEl.textContent = 'เริ่มทำแบบทดสอบ →';
+  } else {
+    btnEl.textContent = 'กำลังตรวจสอบ...';
+    btnEl.disabled = true;
+  }
 }
+
+const _recCache = {};
 
 async function checkStatus() {
   const val = document.getElementById('name-input').value.trim();
   const num = parseInt(val);
   const statusEl = document.getElementById('seq-status');
-  if (val === '' || isNaN(num) || num < 1 || num > 72) { statusEl.className = 'seq-status'; userName = ''; updBtn(); return; }
+
+  if (val === '' || isNaN(num) || num < 1 || num > 72) {
+    statusEl.className = 'seq-status'; userName = '';
+    document.getElementById('home-start').disabled = true;
+    document.getElementById('home-start').textContent = 'เริ่มทำแบบทดสอบ →';
+    return;
+  }
   userName = val;
-  if (!role) { statusEl.className = 'seq-status show seq-none'; statusEl.innerHTML = 'ℹ️ กรุณาเลือกประเภท <strong>(นักเรียน/ครู)</strong> ด้านล่างเพื่อตรวจสอบสถานะ'; updBtn(); return; }
-  const rec = await getSeqRecord(num, role);
-  statusEl.className = 'seq-status show';
-  const roleName = role === 'student' ? 'นักเรียน' : 'ครู';
-  const maxQ = totalQs();
-  if (!rec || rec.pre === null) { statusEl.className = 'seq-status show seq-none'; statusEl.innerHTML = `ℹ️ ลำดับที่ ${num} (${roleName}) ยังไม่ได้ทำ Pretest → จะเริ่มด้วย <strong>Pretest</strong>`; }
-  else if (rec.pre !== null && rec.post === null) { statusEl.className = 'seq-status show seq-pre-done'; statusEl.innerHTML = `✅ ${roleName} ทำ Pretest แล้ว (${rec.pre}/${maxQ} คะแนน) → จะข้ามไปทำ <strong>Posttest</strong>`; }
-  else { statusEl.className = 'seq-status show seq-all-done'; statusEl.innerHTML = `🏆 ${roleName} ทำครบแล้ว! Pre: ${rec.pre} Post: ${rec.post} (จาก ${maxQ} คะแนน)`; }
-  updBtn();
+
+  if (!role) {
+    statusEl.className = 'seq-status show seq-none';
+    statusEl.innerHTML = 'ℹ️ กรุณาเลือกประเภท <strong>(นักเรียน/ครู)</strong> ด้านล่างเพื่อตรวจสอบสถานะ';
+    document.getElementById('home-start').disabled = true;
+    document.getElementById('home-start').textContent = 'เริ่มทำแบบทดสอบ →';
+    return;
+  }
+
+  const cacheKey = num + '|' + role;
+  // ถ้าคีย์เดิม ไม่ต้อง fetch ซ้ำ
+  if (_lastCheckedKey === cacheKey && _recCache[cacheKey] !== undefined) {
+    _renderStatus(num, _recCache[cacheKey], statusEl);
+    updBtn();
+    return;
+  }
+
+  // Debounce — รอ 400ms หลังหยุดพิมพ์ค่อย fetch
+  if (_checkStatusTimer) clearTimeout(_checkStatusTimer);
+  statusEl.className = 'seq-status show seq-none';
+  statusEl.innerHTML = '⏳ กำลังตรวจสอบ...';
+  document.getElementById('home-start').disabled = true;
+  document.getElementById('home-start').textContent = 'กำลังตรวจสอบ...';
+
+  _checkStatusTimer = setTimeout(async () => {
+    // ตรวจว่าค่าใน input ยังตรงกับที่ผู้ใช้พิมพ์อยู่ไหม
+    const currentVal = document.getElementById('name-input').value.trim();
+    const currentNum = parseInt(currentVal);
+    if (currentNum !== num || !role) return;
+
+    let rec;
+    try {
+      rec = await getSeqRecord(num, role);
+    } catch(e) {
+      rec = null;
+    }
+    _recCache[cacheKey] = rec;
+    _lastCheckedKey = cacheKey;
+
+    // ตรวจอีกครั้งว่า input ยังเป็นค่าเดิมอยู่
+    if (document.getElementById('name-input').value.trim() !== currentVal) return;
+
+    if (rec === null && _recCache[cacheKey] === null) {
+      // อาจเป็น network error หรือยังไม่มีในระบบ — แสดงเป็น "ยังไม่ได้ทำ"
+    }
+    _renderStatus(num, rec, statusEl);
+    updBtn();
+  }, 400);
 }
 
-function selectRole(r) { role = r; document.getElementById('rc-student').classList.toggle('active', r === 'student'); document.getElementById('rc-teacher').classList.toggle('active', r === 'teacher'); checkStatus(); }
+function _renderStatus(num, rec, statusEl) {
+  const roleName = role === 'student' ? 'นักเรียน' : 'ครู';
+  const maxQ = totalQs();
+  if (!rec || rec.pre === null) {
+    statusEl.className = 'seq-status show seq-none';
+    statusEl.innerHTML = `ℹ️ ลำดับที่ ${num} (${roleName}) ยังไม่ได้ทำ Pretest → จะเริ่มด้วย <strong>Pretest</strong>`;
+  } else if (rec.pre !== null && rec.post === null) {
+    statusEl.className = 'seq-status show seq-pre-done';
+    statusEl.innerHTML = `✅ ${roleName} ทำ Pretest แล้ว (${rec.pre}/${maxQ} คะแนน) → จะข้ามไปทำ <strong>Posttest</strong>`;
+  } else {
+    statusEl.className = 'seq-status show seq-all-done';
+    statusEl.innerHTML = `🏆 ${roleName} ทำครบแล้ว! Pre: ${rec.pre} Post: ${rec.post} (จาก ${maxQ} คะแนน)`;
+  }
+}
+
+function selectRole(r) {
+  role = r;
+  // clear cache ทั้งหมดเพื่อ force re-fetch เมื่อเปลี่ยนประเภท
+  _lastCheckedKey = '';
+  const val = document.getElementById('name-input').value.trim();
+  const num = parseInt(val);
+  if (!isNaN(num) && num >= 1 && num <= 72) {
+    // ลบ cache ของทั้ง student และ teacher เพื่อไม่ให้ค้าง
+    delete _recCache[num + '|student'];
+    delete _recCache[num + '|teacher'];
+  }
+  document.getElementById('rc-student').classList.toggle('active', r === 'student');
+  document.getElementById('rc-teacher').classList.toggle('active', r === 'teacher');
+  checkStatus();
+}
 
 async function handleStart() {
   const val = document.getElementById('name-input').value.trim();
   const num = parseInt(val);
-  if (!val || isNaN(num) || num < 1 || num > 72) { document.getElementById('name-input').classList.add('err'); document.getElementById('name-err').classList.add('show'); document.getElementById('name-input').focus(); return; }
+  if (!val || isNaN(num) || num < 1 || num > 72) {
+    document.getElementById('name-input').classList.add('err');
+    document.getElementById('name-err').classList.add('show');
+    document.getElementById('name-input').focus();
+    return;
+  }
   if (!role) { alert('กรุณาเลือกประเภท (นักเรียน/ครู)'); return; }
   userName = val;
-  const rec = await getSeqRecord(num, role);
+  const cacheKey = num + '|' + role;
+  // ใช้ข้อมูล cache ถ้ามี ไม่งั้นค่อย fetch
+  let rec = _recCache[cacheKey] !== undefined ? _recCache[cacheKey] : await getSeqRecord(num, role);
   const maxQ = totalQs();
   if (rec && rec.pre !== null && rec.post !== null) {
     answers.pre = rec.preAnswers || new Array(maxQ).fill(-1);
@@ -778,6 +799,8 @@ function renderAnsList(elId, p) {
 function toggleAns(p) { document.getElementById('tg-'+p).classList.toggle('open'); document.getElementById('al-'+p).classList.toggle('open'); }
 function resetAll() {
   role = ''; phase = ''; cur = 0; userName = ''; answers = { pre: [], post: [] };
+  if (_checkStatusTimer) { clearTimeout(_checkStatusTimer); _checkStatusTimer = null; }
+  _lastCheckedKey = '';
   document.getElementById('rc-student').classList.remove('active');
   document.getElementById('rc-teacher').classList.remove('active');
   document.getElementById('name-input').value = '';
@@ -879,28 +902,18 @@ async function exportExcel() {
   const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'ผลการทดสอบ_DLTV_' + new Date().toISOString().slice(0,10) + '.csv';
   document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
 }
-async function clearOverallData() {
-  // แสดง modal ขอ username/password
-  const overlay = document.getElementById('auth-overlay');
-  const usernameInput = document.getElementById('auth-username');
-  const passwordInput = document.getElementById('auth-password');
-  const errEl = document.getElementById('auth-err');
-  // รีเซ็ต modal
-  usernameInput.value = '';
-  passwordInput.value = '';
-  usernameInput.classList.remove('err');
-  passwordInput.classList.remove('err');
-  errEl.classList.remove('show');
-  overlay.classList.remove('hidden');
-  usernameInput.focus();
-}
+async function clearOverallData() { if (confirm('คุณแน่ใจหรือไม่ว่าต้องการล้างข้อมูลภาพรวมทั้งหมด?\n(ข้อมูลผู้เข้าสอบทุกคนจะถูกลบออกจากฐานข้อมูลอย่างถาวร)')) { await deleteAllRecords(); showOverallData(); } }
 
 // Event listeners
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('rc-student').addEventListener('click', () => selectRole('student'));
   document.getElementById('rc-teacher').addEventListener('click', () => selectRole('teacher'));
   const nameInput = document.getElementById('name-input');
-  nameInput.addEventListener('input', () => { document.getElementById('name-err').classList.remove('show'); nameInput.classList.remove('err'); checkStatus(); });
+  nameInput.addEventListener('input', () => {
+    document.getElementById('name-err').classList.remove('show');
+    nameInput.classList.remove('err');
+    checkStatus();
+  });
   document.getElementById('home-start').addEventListener('click', handleStart);
   document.getElementById('overall-btn').addEventListener('click', showOverallData);
   document.getElementById('continue-post').addEventListener('click', () => startExam('post'));
@@ -914,37 +927,6 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('back-home-from-overall').addEventListener('click', () => show('s-home'));
   document.getElementById('export-excel').addEventListener('click', exportExcel);
   document.getElementById('clear-data').addEventListener('click', clearOverallData);
-
-  // Auth modal events
-  document.getElementById('auth-cancel').addEventListener('click', () => {
-    document.getElementById('auth-overlay').classList.add('hidden');
-  });
-  document.getElementById('auth-overlay').addEventListener('click', (e) => {
-    if (e.target === document.getElementById('auth-overlay')) {
-      document.getElementById('auth-overlay').classList.add('hidden');
-    }
-  });
-  document.getElementById('auth-confirm').addEventListener('click', async () => {
-    const username = document.getElementById('auth-username').value.trim();
-    const password = document.getElementById('auth-password').value;
-    const errEl = document.getElementById('auth-err');
-    const uInput = document.getElementById('auth-username');
-    const pInput = document.getElementById('auth-password');
-    if (username === 'dukeza01' && password === 'Dukedikk01') {
-      document.getElementById('auth-overlay').classList.add('hidden');
-      await deleteAllRecords();
-      showOverallData();
-    } else {
-      uInput.classList.add('err');
-      pInput.classList.add('err');
-      errEl.classList.add('show');
-      pInput.value = '';
-      pInput.focus();
-    }
-  });
-  document.getElementById('auth-password').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') document.getElementById('auth-confirm').click();
-  });
   const prevBtn = document.getElementById('btn-prev');
   const nextBtn = document.getElementById('btn-next');
   prevBtn.removeEventListener('click', prevQ);
@@ -953,27 +935,5 @@ document.addEventListener('DOMContentLoaded', () => {
   nextBtn.addEventListener('click', nextQ);
 });
 </script>
-<!-- AUTH MODAL -->
-<div class="auth-overlay hidden" id="auth-overlay">
-  <div class="auth-modal">
-    <div class="auth-modal-icon">🔐</div>
-    <div class="auth-modal-title">ยืนยันตัวตนผู้ดูแล</div>
-    <div class="auth-modal-sub">การล้างข้อมูลทั้งหมดต้องได้รับอนุญาตจากผู้ดูแลระบบเท่านั้น<br>กรุณาใส่ชื่อผู้ใช้และรหัสผ่าน</div>
-    <div class="auth-field">
-      <label class="auth-label">ชื่อผู้ใช้ (Username)</label>
-      <input class="auth-input" id="auth-username" type="text" placeholder="กรอก username" autocomplete="off">
-    </div>
-    <div class="auth-field">
-      <label class="auth-label">รหัสผ่าน (Password)</label>
-      <input class="auth-input" id="auth-password" type="password" placeholder="กรอก password" autocomplete="off">
-    </div>
-    <div class="auth-err" id="auth-err">❌ ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง</div>
-    <div class="auth-actions">
-      <button class="btn-auth-cancel" id="auth-cancel">ยกเลิก</button>
-      <button class="btn-auth-confirm" id="auth-confirm">🗑️ ยืนยันล้างข้อมูล</button>
-    </div>
-  </div>
-</div>
-
 </body>
 </html>
